@@ -15,11 +15,11 @@ class CustomUserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, email, name=None, password=None, familygroup=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(email, password, name=name, familygroup=familygroup, **extra_fields)
 
 
 #FamilyGroupsテーブルの設定
@@ -41,8 +41,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         db_table = 'Users'
 
-    name = models.CharField(verbose_name="ユーザー名", max_length=50)
-    email = models.EmailField(verbose_name="メールアドレス", max_length=254, unique=True)
+    name = models.CharField(verbose_name="ユーザー名", max_length=50, null=False, blank=False)
+    email = models.EmailField(verbose_name="メールアドレス", max_length=254, null=False, unique=True)
     create_at = models.DateTimeField(verbose_name="登録日", default=timezone.now)
     updated_at = models.DateTimeField(verbose_name="更新日時", auto_now=True)
 
