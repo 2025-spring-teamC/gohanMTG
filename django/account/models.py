@@ -30,7 +30,7 @@ class FamilyGroup(models.Model):
     name = models.CharField(verbose_name="グループ名", max_length=50, unique=True, null=False)
     password = models.CharField(verbose_name="合言葉", max_length=100, null=False)
     create_at = models.DateTimeField(verbose_name="登録日", default=timezone.now)
-    updated_at = models.DateTimeField(verbose_name="更新日時", default=timezone.now, auto_now=True)
+    updated_at = models.DateTimeField(verbose_name="更新日時", auto_now=True)
 
     def __str__(self):
         return self.name
@@ -44,7 +44,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(verbose_name="ユーザー名", max_length=50)
     email = models.EmailField(verbose_name="メールアドレス", max_length=254, unique=True)
     create_at = models.DateTimeField(verbose_name="登録日", default=timezone.now)
-    updated_at = models.DateTimeField(verbose_name="更新日時", default=timezone.now, auto_now=True)
+    updated_at = models.DateTimeField(verbose_name="更新日時", auto_now=True)
 
     familygroup = models.ForeignKey(
         FamilyGroup,
