@@ -11,7 +11,7 @@ from .models import User, FamilyGroup
 def group_select_view(request):
 
     context = {
-        "action": request.POST.get("action", ""),
+        "action": request.POST.get("action", ""), # "join" or "create"
         "group_name": request.POST.get("group_name", ""),
         "group_password": request.POST.get("group_password", ""),
         "new_group_name": request.POST.get("new_group_name", ""),
