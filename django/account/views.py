@@ -13,9 +13,7 @@ def group_select_view(request):
     context = {
         "action": request.POST.get("action", ""), # "join" or "create"
         "group_name": request.POST.get("group_name", ""),
-        "group_password": request.POST.get("group_password", ""),
         "new_group_name": request.POST.get("new_group_name", ""),
-        "new_group_password": request.POST.get("new_group_password", ""),
     }
 
     if request.method == "POST":
@@ -28,7 +26,7 @@ def group_select_view(request):
         #グループに参加する場合
         if action == "join":
             name = context["group_name"]
-            password = context["group_password"]
+            password = request.POST.get("group_password")
             try:
                 group = FamilyGroup.objects.get(name=name)
                 if group.password == password:
@@ -42,7 +40,7 @@ def group_select_view(request):
         #グループを作成する場合
         elif action == "create":
             name = context["new_group_name"]
-            password = context["new_group_password"]
+            password = request.POST.get("new_group_password")
             if FamilyGroup.objects.filter(name=name).exists():
                 messages.error(request, "そのグループ名は既に使われています")
             else:
@@ -71,14 +69,13 @@ def signup_view(request):
         "group": group,
         "name": request.POST.get("name", ""),
         "email": request.POST.get("email", ""),
-        "password": request.POST.get("password", ""),
     }
 
     #サインアップ処理
     if request.method == "POST":
         name = context["name"]
         email = context["email"]
-        password = context["password"]
+        password = request.POST.get("password")
 
         if not (name and email and password and group_id):
             messages.error(request, "全ての項目を入力してください")
@@ -100,12 +97,11 @@ def login_view(request):
 
     context = {
         "email": request.POST.get("email", ""),
-        "password": request.POST.get("password", ""),
     }
 
     if request.method == "POST":
         email = context["email"]
-        password = context["password"]
+        password = request.POST.get("password", "")
 
         if not email or not password:
             messages.error(request, "メールアドレスとパスワードを両方入力してください")
