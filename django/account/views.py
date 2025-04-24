@@ -64,8 +64,6 @@ def signup_view(request):
         messages.error(request, "指定されたグループが見つかりません")
         return redirect("group_select")
 
-    del request.session["group_id"]
-
     context = {
         "group": group,
         "name": request.POST.get("name", ""),
@@ -88,6 +86,7 @@ def signup_view(request):
 
         user = User.objects.create_user(email=email, password=password, name=name, familygroup=group)
         messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
+        del request.session["group_id"]
         return redirect("login")
 
     return render(request, "signup.html", context)
