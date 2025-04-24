@@ -30,8 +30,8 @@ def group_select_view(request):
             try:
                 group = FamilyGroup.objects.get(name=name)
                 if group.password == password:
-                    redirect_url = reverse("signup") + "?" + urlencode({"group_id": group.id})
-                    return HttpResponseRedirect(redirect_url)
+                    request.session["group_id"] = group.id
+                    return redirect("signup")
                 else:
                     messages.error(request, "合言葉が間違っています")
             except FamilyGroup.DoesNotExist:
@@ -45,8 +45,8 @@ def group_select_view(request):
                 messages.error(request, "そのグループ名は既に使われています")
             else:
                 group = FamilyGroup.objects.create(name=name, password=password)
-                redirect_url = reverse("signup") + "?" + urlencode({"group_id": group.id})
-                return HttpResponseRedirect(redirect_url)
+                request.session["group_id"] = group.id
+                return redirect("signup")
 
     return render(request, "group_select.html", context)
 
@@ -54,8 +54,7 @@ def group_select_view(request):
 #サインアップ機能
 def signup_view(request):
 
-    #グループidを受け取る処理(group_idはgroup_select_viewのurlに付与して渡している)
-    group_id = request.GET.get("group_id")
+    group_id = request.session.get("group_id")
     if not group_id:
         messages.error(request, "グループIDが無効です。もう一度グループ選択を行ってください。")
         return redirect("group_select")
@@ -64,6 +63,8 @@ def signup_view(request):
     except FamilyGroup.DoesNotExist:
         messages.error(request, "指定されたグループが見つかりません")
         return redirect("group_select")
+
+    del request.session["group_id"]
 
     context = {
         "group": group,
