@@ -8,5 +8,10 @@ db.sqlite3
 # tailwind
 node_modules/
 
+#nginx
+nginx/static/
+
 .env
 .vscode
+
+
