@@ -1,1 +1,92 @@
 @import "tailwindcss";
+@theme inline {
+    --color-*: initial;
+    --color-primary: var(--primary);
+    --color-destructive: var(--destructive);
+    --color-background: var(--background);
+    --color-background-muted: var(--background-muted);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-primary-foreground: var(--primary-foreground);
+}
+
+:root {
+    --foreground: oklch(0.141% 0.005 285.823);
+    --background: oklch(1 0 0);
+    --background-muted: oklch(0.96 0.0032 197.1);
+    --primary: oklch(76.9% 0.188 70.08);
+    --primary-foreground: oklch(0.982 0.018 155.826);
+    --border: oklch(87.2% 0.01 258.338);
+    --input: oklch(87.2% 0.01 258.338);
+    --ring: oklch(0.97 0 0);
+    --muted: oklch(0.967 0.001 286.375);
+    --muted-foreground: oklch(0.552 0.016 285.938);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.982 0.018 155.826);
+}
+
+body {
+    background-color: var(--background-muted);
+    color: var(--foreground);
+    height: 100vh;
+}
+
+@layer components {
+    .heading1 {
+        @apply text-xl font-bold text-primary;
+    }
+    .messages:has(li.error) {
+        border-color: var(--destructive);
+        @apply border rounded-md p-4 bg-destructive/10 text-sm;
+    }
+    .messages li.error {
+        color: var(--destructive);
+    }
+    .messages:has(li.success) {
+        border-color: var(--primary);
+        @apply border rounded-md p-4 bg-primary/10 text-sm;
+    }
+    .messages li.success {
+        color: var(--primary);
+    }
+    .form-label {
+        @apply block text-sm font-medium text-muted-foreground;
+    }
+    .input {
+        @apply mt-1 block w-full px-3 py-2 border border-input rounded-md shadow-sm;
+    }
+    .input:focus {
+        @apply outline-none ring-primary border-primary;
+    }
+    .button {
+        @apply w-full block text-center py-2 px-4 rounded-full;
+    }
+    .button-primary {
+        @apply bg-primary text-primary-foreground;
+    }
+    .button-primary:hover {
+        @apply bg-primary/80;
+    }
+    .button-primary:focus {
+        @apply outline-none ring-primary ring-2;
+    }
+    .button-secondary {
+        @apply border border-primary text-primary
+    }
+    .button-secondary:hover {
+        @apply bg-primary/10;
+    }
+    .button-secondary:focus {
+        @apply outline-none ring-primary ring-2;
+    }
+    .tab-button {
+        @apply border-b-2 border-transparent whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm w-full;
+    }
+    .tab-button.active-tab {
+        @apply border-primary text-primary;
+    }
+}
