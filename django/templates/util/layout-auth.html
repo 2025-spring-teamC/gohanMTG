@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+
+<head>
+    {% block head %} {% load static %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <title>{% block title %}{% endblock %} - うちのごはん会議</title>
+    {% endblock %}
+</head>
+
+<body class="bg-background-muted grid grid-rows-[auto_1fr_auto] h-full">
+    {% include "util/header.html" %}
+    <div id="content" class="bg-background-muted  min-w-screen">
+        <div class="flex items-center justify-center h-full">
+            <div class="bg-background p-8 rounded-lg shadow-md w-96">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    <div id="footer" class="text-center text-muted-foreground">
+        {% block footer %} &copy; Copyright 2025 by <a href="http://gohanmtg.com/">うちのごはん会議</a>. {% endblock %}
+    </div>
+</body>
+
+</html>
