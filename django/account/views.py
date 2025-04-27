@@ -3,10 +3,10 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password, check_password
-from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from .models import User, FamilyGroup
+from .validators import validate_password_strength, validate_email_format
 
 
 #グループ選択機能
@@ -61,7 +61,6 @@ def group_select_view(request):
                 messages.error(request, "そのグループ名と合言葉の組み合わせは既に存在します")
 
             else:
-                group = FamilyGroup.objects.create(name=name, password=make_password(password))
                 request.session["group_action"] = "create"
                 request.session["group_name"] = name
                 request.session["group_password"] = password
@@ -92,31 +91,52 @@ def signup_view(request):
         email = context["email"]
         password = request.POST.get("password")
 
+        # 入力チェック
         if not (name and email and password):
             messages.error(request, "全ての項目を入力してください")
             return render(request, "signup.html", context)
 
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "このメールアドレスは既に使われています")
-            return render(request, "signup.html", context)
+        # カスタムバリデーション
+        # バリデーションエラーをまとめて集める
+        errors = []
 
         try:
-            validate_password(password)
+            validate_email_format(email)
         except ValidationError as e:
-            messages.error(request, f"パスワードエラー: {'; '.join(e.messages)}")
-            return render(request, "signup.html", context)
+            errors.append(f"メールアドレスエラー: {str(e)}")
 
         try:
-            group = FamilyGroup.objects.get(name=group_name)
-        except FamilyGroup.DoesNotExist:
-            messages.error(request, "グループが存在しません")
-            for key in ["group_action", "group_name", "group_password"]:
-                request.session.pop(key, None)
+            validate_password_strength(password)
+        except ValidationError as e:
+            errors.append(f"パスワードエラー: {str(e)}")
+
+        # エラーが1つ以上あったら、すべて表示して戻す
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, "signup.html", context)
+
+        # グループの作成または参加
+        if group_action == "create":
+            group = FamilyGroup.objects.create(
+                name=group_name,
+                password=make_password(group_password)
+            )
+        elif group_action == "join":
+            try:
+                group = FamilyGroup.objects.get(name=group_name)
+            except FamilyGroup.DoesNotExist:
+                messages.error(request, "グループが見つかりません")
+                return redirect("group_select")
+        else:
+            messages.error(request, "不正なグループアクションです")
             return redirect("group_select")
 
+        #ユーザー作成
         user = User.objects.create_user(email=email, password=password, name=name, familygroup=group)
         messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
 
+        #セッションクリア
         for key in ["group_action", "group_name", "group_password"]:
             if key in request.session:
                 del request.session[key]
