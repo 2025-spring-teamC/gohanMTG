@@ -1,7 +1,6 @@
 
 services:
   db:
-    container_name: mysql
     build:
       context: .
       dockerfile: ./mysql/Dockerfile
@@ -19,7 +18,6 @@ services:
       timeout: 5s
       retries: 5
   app:
-    container_name: django
     build:
       context: .
       dockerfile: ./django/Dockerfile
@@ -36,7 +34,6 @@ services:
       db: 
         condition: service_healthy
   tailwind:
-    container_name: tailwind
     build:
       context: .
       dockerfile: ./django/Dockerfile

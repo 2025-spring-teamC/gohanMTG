@@ -1,6 +1,5 @@
 services:
   db:
-    container_name: mysql
     build:
       context: .
       dockerfile: ./mysql/Dockerfile
@@ -18,7 +17,6 @@ services:
       timeout: 5s
       retries: 5
   app:
-    container_name: django
     build:
       context: .
       dockerfile: ./django/Dockerfile.prod
@@ -28,7 +26,7 @@ services:
               python django/manage.py migrate &&
               gunicorn gohanMTG.wsgi:application --chdir django --bind 0.0.0.0:8000"
     volumes:
-      # - .:/code
+      - .:/code
       - static_volume:/code/nginx/static/
     ports:
       - "8000:8000"
@@ -38,7 +36,6 @@ services:
       db: 
         condition: service_healthy
   web:
-    container_name: nginx
     build:
       context: .
       dockerfile: ./nginx/Dockerfile.prod
