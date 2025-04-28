@@ -98,9 +98,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', #最小文字数制限の設定
-        'OPTIONS': {
-            'min_length': 8,  # 最小文字数を8に設定
-        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', #よく使われるパスワードの禁止
