@@ -97,6 +97,38 @@ def group_select_view(request):
     return render(request, "group_select.html", context)
 
 
+def create_group(name, password):
+    """
+    新しいグループを作成する処理
+    """
+    # グループ作成処理
+    if FamilyGroup.objects.filter(name=name, secret_key=make_password(password)).exists():
+        raise Exception("そのグループ名と合言葉の組み合わせは既に存在します。")
+
+    # 合言葉のハッシュ化
+    hashed_password = make_password(password)
+
+    # グループ作成
+    group = FamilyGroup.objects.create(
+        name=name,
+        secret_key=hashed_password
+    )
+    return group
+
+
+def join_group(name, password):
+    """
+    既存のグループに参加する処理
+    """
+    try:
+        group = FamilyGroup.objects.get(name=name)
+        if check_password(password, group.secret_key):
+            return group
+        else:
+            raise Exception("合言葉が間違っています。")
+    except FamilyGroup.DoesNotExist:
+        raise Exception("グループが見つかりません。")
+
 #サインアップ機能
 @transaction.atomic
 def signup_view(request):
@@ -158,19 +190,15 @@ def signup_view(request):
             return render(request, "signup.html", context)
 
         # グループの作成または参加
-        if group_action == "create":
-            group = FamilyGroup.objects.create(
-                name=group_name,
-                password=make_password(group_password)
-            )
-        elif group_action == "join":
-            try:
-                group = FamilyGroup.objects.get(name=group_name)
-            except FamilyGroup.DoesNotExist:
-                messages.error(request, "グループが見つかりません")
-                return redirect("group_select")
-        else:
-            messages.error(request, "不正なグループアクションです")
+        try:
+            if group_action == "create":
+                group = create_group(group_name, group_password)
+            elif group_action == "join":
+                group = join_group(group_name, group_password)
+            else:
+                raise Exception("不正なグループアクションです")
+        except Exception as e:
+            messages.error(request, str(e))
             return redirect("group_select")
 
         #ユーザー作成
