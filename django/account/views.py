@@ -210,7 +210,7 @@ def signup_view(request):
             if key in request.session:
                 del request.session[key]
 
-        return redirect("login")
+        return redirect("home")
 
     return render(request, "signup.html", context)
 
