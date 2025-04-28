@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from .models import User, FamilyGroup
-from .validators import validate_password_strength, validate_email_format
+from .validators import validate_secret_word_strength, validate_password_strength, validate_email_format
 
 
 #グループ選択機能
@@ -16,6 +16,8 @@ def group_select_view(request):
         "group_name": request.POST.get("group_name", ""),
         "new_group_name": request.POST.get("new_group_name", ""),
     }
+
+    errors = []
 
     if request.method == "POST":
         action = context["action"]
@@ -29,42 +31,68 @@ def group_select_view(request):
             name = context["group_name"]
             password = request.POST.get("group_password")
 
+            # 入力チェック
+            if not name:
+                errors.append("グループ名を入力してください。")
+            if not password:
+                errors.append("合言葉を入力してください。")
+
             try:
                 group = FamilyGroup.objects.get(name=name)
                 #ハッシュ化されたパスワードのチェック
-                if check_password(password, group.password):
+                if check_password(password, group.secret_key):
                     request.session["group_action"] = "join"
                     request.session["group_name"] = name
                     request.session["group_password"] = password
                     return redirect("signup")
                 else:
-                    messages.error(request, "合言葉が間違っています")
+                    errors.append("合言葉が間違っています。")
 
             except FamilyGroup.DoesNotExist:
-                messages.error(request, "グループが見つかりません")
-                context["group_name"] = ""
-
+                errors.append("グループが見つかりません。")
+                context["group_name"] = name
 
         #グループを作成する場合
         elif action == "create":
             name = context["new_group_name"]
             password = request.POST.get("new_group_password")
 
-            existing_groups = FamilyGroup.objects.filter(name=name)
-            group_exists = False
-            for group in existing_groups:
-                if check_password(password, group.password):
-                    group_exists = True
-                    break
+            # 入力チェック
+            if not name:
+                errors.append("グループ名を入力してください。")
+            if not password:
+                errors.append("合言葉を入力してください。")
 
-            if group_exists:
-                messages.error(request, "そのグループ名と合言葉の組み合わせは既に存在します")
+            # バリデーションチェック
+            try:
+                validate_secret_word_strength(password)
+            except ValidationError as e:
+                errors.append(f"合言葉エラー: {str(e)}")
 
+            # 重複チェック
+            hashed_password = make_password(password)
+            if FamilyGroup.objects.filter(name=name, secret_key=hashed_password).exists():
+                errors.append("そのグループ名と合言葉の組み合わせは既に存在します。")
+
+            if errors:
+                # エラーがある場合、フォームの入力値を保持して再表示
+                for error in errors:
+                    messages.error(request, error)
+                    context["new_group_name"] = name
+                return render(request, "group_select.html", context)
+
+            # 成功した場合
             else:
                 request.session["group_action"] = "create"
                 request.session["group_name"] = name
                 request.session["group_password"] = password
                 return redirect("signup")
+
+        # エラーがあった場合表示
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, "group_select.html", context)
 
     return render(request, "group_select.html", context)
 
