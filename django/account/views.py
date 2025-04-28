@@ -90,16 +90,22 @@ def signup_view(request):
         name = context["name"]
         email = context["email"]
         password = request.POST.get("password")
+        password_confirm = request.POST.get("password_confirm")
 
-        # 入力チェック
-        if not (name and email and password):
-            messages.error(request, "全ての項目を入力してください")
-            return render(request, "signup.html", context)
-
-        # カスタムバリデーション
-        # バリデーションエラーをまとめて集める
+        # 入力エラーをまとめて集める
         errors = []
 
+        #入力項目チェック
+        if not name:
+            errors.append("名前を入力してください。")
+        if not email:
+            errors.append("メールアドレスを入力してください。")
+        if not password:
+            errors.append("パスワードを入力してください。")
+        if not password_confirm:
+            errors.append("確認用パスワードを入力してください。")
+
+        # バリデーションエラーをまとめて集める
         try:
             validate_email_format(email)
         except ValidationError as e:
@@ -110,10 +116,17 @@ def signup_view(request):
         except ValidationError as e:
             errors.append(f"パスワードエラー: {str(e)}")
 
+        if password != password_confirm:
+            errors.append("パスワードと確認用パスワードが一致しません。")
+
         # エラーが1つ以上あったら、すべて表示して戻す
         if errors:
             for error in errors:
                 messages.error(request, error)
+            context.update({
+                "name": name,
+                "email": email,
+            })
             return render(request, "signup.html", context)
 
         # グループの作成または参加
