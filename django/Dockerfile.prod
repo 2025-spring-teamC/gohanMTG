@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Tailwind CSSの依存関係をインストール
-RUN npm install tailwindcss@4.1.4 @tailwindcss/cli
+COPY ../package.json ../package-lock.json /code/
+RUN npm install
 
 COPY . /code
 

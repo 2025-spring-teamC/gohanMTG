@@ -1,4 +1,4 @@
-.PHONY: setup up prod down alldelete django mysql
+.PHONY: setup up prod down alldelete django mysql nginx
 
 setup:
 	@make up

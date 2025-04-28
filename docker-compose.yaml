@@ -23,8 +23,7 @@ services:
     build:
       context: .
       dockerfile: ./django/Dockerfile
-    command: sh -c "npm run watch &
-              python django/manage.py migrate &&
+    command: sh -c "python django/manage.py migrate &&
               python django/manage.py create_dev_superuser &&
               python django/manage.py runserver 0.0.0.0:8000"
     volumes:
@@ -36,3 +35,12 @@ services:
     depends_on:
       db: 
         condition: service_healthy
+  tailwind:
+    container_name: tailwind
+    build:
+      context: .
+      dockerfile: ./django/Dockerfile
+    command: npm run watch
+    volumes:
+      - .:/code
+    tty: true

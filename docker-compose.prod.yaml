@@ -28,7 +28,7 @@ services:
               python django/manage.py migrate &&
               gunicorn gohanMTG.wsgi:application --chdir django --bind 0.0.0.0:8000"
     volumes:
-      - .:/code
+      # - .:/code
       - static_volume:/code/nginx/static/
     ports:
       - "8000:8000"
@@ -46,6 +46,8 @@ services:
       - static_volume:/code/nginx/static/
     ports:
       - "80:80"
+    depends_on:
+      - app
 
 volumes:
   static_volume:

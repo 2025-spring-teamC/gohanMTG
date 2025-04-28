@@ -12,6 +12,7 @@ node_modules/
 nginx/static/
 
 .env
+.env.prod
 .vscode
 
 
