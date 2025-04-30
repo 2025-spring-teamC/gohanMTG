@@ -67,12 +67,14 @@ def group_select_view(request):
             try:
                 validate_secret_word_strength(password)
             except ValidationError as e:
-                errors.append(f"合言葉エラー: {str(e)}")
+                for message in e.messages:
+                    errors.append(f"合言葉エラー: {message}")
 
             # 重複チェック
-            hashed_password = make_password(password)
-            if FamilyGroup.objects.filter(name=name, secret_key=hashed_password).exists():
-                errors.append("そのグループ名と合言葉の組み合わせは既に存在します。")
+            existing_groups = FamilyGroup.objects.filter(name=name)
+            for group in existing_groups:
+                if check_password(password, group.secret_key):
+                    errors.append("そのグループ名と合言葉の組み合わせは既に存在します。")
 
             if errors:
                 # エラーがある場合、フォームの入力値を保持して再表示
@@ -101,9 +103,12 @@ def create_group(name, password):
     """
     新しいグループを作成する処理
     """
-    # グループ作成処理
-    if FamilyGroup.objects.filter(name=name, secret_key=make_password(password)).exists():
-        raise Exception("そのグループ名と合言葉の組み合わせは既に存在します。")
+
+    # 同じグループ名が存在するかチェック
+    existing_groups = FamilyGroup.objects.filter(name=name)
+    for group in existing_groups:
+        if check_password(password, group.secret_key):
+            raise Exception("そのグループ名と合言葉の組み合わせは既に存在します。")
 
     # 合言葉のハッシュ化
     hashed_password = make_password(password)
@@ -169,12 +174,17 @@ def signup_view(request):
         try:
             validate_email_format(email)
         except ValidationError as e:
-            errors.append(f"メールアドレスエラー: {str(e)}")
+            for message in e.messages:
+                errors.append(f"メールアドレスエラー: {message}")
+
+        if User.objects.filter(email=email).exists():
+            errors.append("そのメールアドレスは既に登録されています。")
 
         try:
             validate_password_strength(password)
         except ValidationError as e:
-            errors.append(f"パスワードエラー: {str(e)}")
+            for message in e.messages:
+                errors.append(f"メールアドレスエラー: {message}")
 
         if password != password_confirm:
             errors.append("パスワードと確認用パスワードが一致しません。")
