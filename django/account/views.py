@@ -184,7 +184,7 @@ def signup_view(request):
             validate_password_strength(password)
         except ValidationError as e:
             for message in e.messages:
-                errors.append(f"メールアドレスエラー: {message}")
+                errors.append(f"パスワードエラー: {message}")
 
         if password != password_confirm:
             errors.append("パスワードと確認用パスワードが一致しません。")
