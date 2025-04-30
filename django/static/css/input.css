@@ -39,6 +39,9 @@ body {
     .heading1 {
         @apply text-xl font-bold text-primary;
     }
+    .error-message {
+        @apply text-destructive text-sm mt-px;
+    }
     .messages:has(li.error) {
         border-color: var(--destructive);
         @apply border rounded-md p-4 bg-destructive/10 text-sm;
@@ -88,5 +91,11 @@ body {
     }
     .tab-button.active-tab {
         @apply border-primary text-primary;
+    }
+    .tab-content {
+        @apply hidden;
+    }
+    .tab-content.active-tab-content {
+        @apply block;
     }
 }
