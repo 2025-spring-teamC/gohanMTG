@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, FamilyGroup
+from account import models
 
-@admin.register(User)
+@admin.register(models.User)
 class CustomUserAdmin(UserAdmin):
-    model = User
+    model = models.User
     list_display = ("email", "name", "is_staff", "is_active", "familygroup")
     list_filter = ("is_staff", "is_active", "familygroup")
     fieldsets = (
@@ -20,4 +20,4 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ("email", "name")
     ordering = ("email",)
 
-admin.site.register(FamilyGroup)
+admin.site.register(models.FamilyGroup)

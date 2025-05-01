@@ -1,12 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import check_password
 from django.db import transaction
-from account.models import User, FamilyGroup
-from account.validators import validate_secret_word_strength
+from account import models, helpers, validators
 from account.errors import add_error
-from account.helpers import validate_unique_group_name_and_password, create_group, join_group, collect_signup_errors, clear_group_session
 
 # グループ選択機能
 def group_select_view(request):
@@ -36,7 +34,7 @@ def group_select_view(request):
                 errors = add_error(errors, "group_password_required")
 
             try:
-                group = FamilyGroup.objects.get(name=name)
+                group = models.FamilyGroup.objects.get(name=name)
                 #ハッシュ化されたパスワードのチェック
                 if check_password(password, group.secret_key):
                     request.session["group_action"] = "join"
@@ -46,7 +44,7 @@ def group_select_view(request):
                 else:
                     errors = add_error(errors, "secret_key_mismatch")
 
-            except FamilyGroup.DoesNotExist:
+            except models.FamilyGroup.DoesNotExist:
                 errors = add_error(errors, "group_not_found")
 
         #グループを作成する場合
@@ -62,10 +60,10 @@ def group_select_view(request):
 
             # バリデーションチェック
             if password:
-                errors = validate_secret_word_strength(password, errors)
+                errors = validators.validate_secret_word_strength(password, errors)
 
             # グループ名と合言葉の重複チェック
-            errors = validate_unique_group_name_and_password(name, password, errors)
+            errors = helpers.validate_unique_group_name_and_password(name, password, errors)
 
             # 成功した場合
             if not errors:
@@ -107,7 +105,7 @@ def signup_view(request):
         password_confirm = request.POST.get("password_confirm")
 
         # サインアップのバリデーションエラー
-        errors = collect_signup_errors(name, email, password, password_confirm, errors)
+        errors = helpers.collect_signup_errors(name, email, password, password_confirm, errors)
         if errors:
             for error in errors:
                 messages.error(request, error)
@@ -116,9 +114,9 @@ def signup_view(request):
         # グループの作成または参加
         try:
             if group_action == "create":
-                group, errors = create_group(group_name, group_password, errors)
+                group, errors = helpers.create_group(group_name, group_password, errors)
             elif group_action == "join":
-                group, errors = join_group(group_name, group_password, errors)
+                group, errors = helpers.join_group(group_name, group_password, errors)
             else:
                 errors = add_error(errors, "invalid_action")
 
@@ -135,7 +133,7 @@ def signup_view(request):
 
         #ユーザー作成
         try:
-            User.objects.create_user(
+            models.User.objects.create_user(
                 email=email,
                 password=password,
                 name=name,
@@ -143,12 +141,12 @@ def signup_view(request):
             )
 
             messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
-            clear_group_session(request.session)
+            helpers.clear_group_session(request.session)
             return redirect("home")
 
         except Exception as e:
             messages.error(request, f"ユーザー登録中にエラーが発生しました: {str(e)}")
-            clear_group_session(request.session)
+            helpers.clear_group_session(request.session)
             return redirect("group_select")
 
     return render(request, "signup.html", context)
@@ -182,6 +180,14 @@ def login_view(request):
                 messages.error(request, error)
 
     return render(request, "login.html", context)
+
+
+# ログアウト機能
+def logout_view(request):
+    logout(request)
+    messages.success(request, "ログアウトしました。")
+    return redirect('login')
+
 
 #追い出し処理
 # @login_required
