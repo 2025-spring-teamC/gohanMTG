@@ -1,83 +1,88 @@
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
-from .models import User, FamilyGroup
-from .validators import validate_secret_word_strength, validate_password_strength, validate_email_format
-
+from account.models import User, FamilyGroup
+from account.validators import validate_password_strength, validate_email_format
+from account.errors import add_error
 
 # グループ名と合言葉の組み合わせが重複しないようにチェック
-def validate_unique_group_name_and_password(name, password):
-    try:
-        # 同じグループ名のグループが存在するか確認
-        existing_group = FamilyGroup.objects.get(name=name)
+def validate_unique_group_name_and_password(name, password, errors):
 
-        # 合言葉のハッシュを比較
-        if check_password(password, existing_group.secret_key):
-            raise ValidationError("そのグループ名と合言葉の組み合わせは既に存在します。")
-    except FamilyGroup.DoesNotExist:
-        # グループ名が存在しない場合は新規作成可能
-        pass
+        # 同じグループ名のグループが存在するか確認
+    existing_groups = FamilyGroup.objects.filter(name=name)
+
+    # 合言葉のハッシュを比較
+    for group in existing_groups:
+        if check_password(password, group.secret_key):
+            errors = add_error(errors, "group_exists")
+            break
+
+    return errors
 
 
 # グループ作成
-def create_group(name, password):
+def create_group(name, password, errors):
 
     # グループ名と合言葉の重複チェック
-    validate_unique_group_name_and_password(name, password)
-
-    # 合言葉のハッシュ化
-    hashed_password = make_password(password)
+    errors = validate_unique_group_name_and_password(name, password, errors)
+    if errors:
+        return None, errors
 
     # グループ作成
     group = FamilyGroup.objects.create(
         name=name,
-        secret_key=hashed_password
+        secret_key=password
     )
-    return group
+
+    return group, errors
 
 
 # グループ参加
-def join_group(name, password):
-    """
-    既存のグループに参加する処理
-    """
+def join_group(name, password, errors):
+
     try:
         group = FamilyGroup.objects.get(name=name)
         if check_password(password, group.secret_key):
-            return group
+            return group, errors
         else:
-            raise ValidationError("合言葉が間違っています。")
+            errors = add_error(errors, "secret_key_mismatch")
     except FamilyGroup.DoesNotExist:
-        raise ValidationError("グループが見つかりません。")
+        errors = add_error(errors, "group_not_found")
+
+    return None, errors
 
 
 # サインアップのバリデーションエラー
-def collect_signup_errors(name, email, password, password_confirm):
-    errors = []
+def collect_signup_errors(name, email, password, password_confirm, errors):
 
     if not name:
-        errors.append("名前を入力してください。")
+        errors = add_error(errors, "name_required")
     if not email:
-        errors.append("メールアドレスを入力してください。")
+        errors = add_error(errors, "email_required")
     if not password:
-        errors.append("パスワードを入力してください。")
+        errors = add_error(errors, "password_required")
     if not password_confirm:
-        errors.append("確認用パスワードを入力してください。")
+        errors = add_error(errors, "password_confirm_required")
 
     if email:
         try:
-            validate_email_format(email)
+            errors = validate_email_format(email, errors)
         except ValidationError as e:
             errors.extend([f"メールアドレスエラー: {m}" for m in e.messages])
         if User.objects.filter(email=email).exists():
-            errors.append("そのメールアドレスは既に登録されています。")
+            errors = add_error(errors, "email_taken")
 
     if password:
         try:
-            validate_password_strength(password)
+            errors = validate_password_strength(password, errors)
         except ValidationError as e:
             errors.extend([f"パスワードエラー: {m}" for m in e.messages])
 
     if password != password_confirm:
-            errors.append("パスワードと確認用パスワードが一致しません。")
+        errors = add_error(errors, "password_mismatch")
 
     return errors
+
+# セッションクリア
+def clear_group_session(session):
+    for key in ["group_action", "group_name", "group_password"]:
+        session.pop(key, None)

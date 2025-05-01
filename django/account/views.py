@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.hashers import make_password, check_password
-from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import check_password
 from django.db import transaction
-from .models import User, FamilyGroup
-from .validators import validate_secret_word_strength
-from .helpers import validate_unique_group_name_and_password, create_group, join_group, collect_signup_errors
+from account.models import User, FamilyGroup
+from account.validators import validate_secret_word_strength
+from account.errors import add_error
+from account.helpers import validate_unique_group_name_and_password, create_group, join_group, collect_signup_errors, clear_group_session
 
 # グループ選択機能
 def group_select_view(request):
@@ -15,14 +15,13 @@ def group_select_view(request):
         "group_name": request.POST.get("group_name", ""),
         "new_group_name": request.POST.get("new_group_name", ""),
     }
-
     errors = []
 
     if request.method == "POST":
         action = context["action"]
 
         if action not in ["join", "create"]:
-            messages.error(request, "無効なアクションです")
+            errors = add_error(errors, "invalid_action")
             return render(request, "group_select.html", context)
 
         #グループに参加する場合
@@ -32,9 +31,9 @@ def group_select_view(request):
 
             # 入力チェック
             if not name:
-                errors.append("グループ名を入力してください。")
+                errors = add_error(errors, "group_name_required")
             if not password:
-                errors.append("合言葉を入力してください。")
+                errors = add_error(errors, "group_password_required")
 
             try:
                 group = FamilyGroup.objects.get(name=name)
@@ -45,11 +44,10 @@ def group_select_view(request):
                     request.session["group_password"] = password
                     return redirect("signup")
                 else:
-                    errors.append("合言葉が間違っています。")
+                    errors = add_error(errors, "secret_key_mismatch")
 
             except FamilyGroup.DoesNotExist:
-                errors.append("グループが見つかりません。")
-                context["group_name"] = name
+                errors = add_error(errors, "group_not_found")
 
         #グループを作成する場合
         elif action == "create":
@@ -58,43 +56,28 @@ def group_select_view(request):
 
             # 入力チェック
             if not name:
-                errors.append("グループ名を入力してください。")
+                errors = add_error(errors, "group_name_required")
             if not password:
-                errors.append("合言葉を入力してください。")
+                errors = add_error(errors, "group_password_required")
 
             # バリデーションチェック
-            try:
-                validate_secret_word_strength(password)
-            except ValidationError as e:
-                for message in e.messages:
-                    errors.append(f"合言葉エラー: {message}")
+            if password:
+                errors = validate_secret_word_strength(password, errors)
 
             # グループ名と合言葉の重複チェック
-            try:
-                validate_unique_group_name_and_password(name, password)
-            except ValidationError as e:
-                for message in e.messages:
-                    errors.append(message)
-
-            if errors:
-                # エラーがある場合、フォームの入力値を保持して再表示
-                for error in errors:
-                    messages.error(request, error)
-                    context["new_group_name"] = name
-                return render(request, "group_select.html", context)
+            errors = validate_unique_group_name_and_password(name, password, errors)
 
             # 成功した場合
-            else:
+            if not errors:
                 request.session["group_action"] = "create"
                 request.session["group_name"] = name
                 request.session["group_password"] = password
                 return redirect("signup")
 
-        # エラーがあった場合表示
         if errors:
-            for error in errors:
-                messages.error(request, error)
-            return render(request, "group_select.html", context)
+                for error in errors:
+                    messages.error(request, error)
+                return render(request, "group_select.html", context)
 
     return render(request, "group_select.html", context)
 
@@ -106,6 +89,7 @@ def signup_view(request):
         "name": request.POST.get("name", ""),
         "email": request.POST.get("email", ""),
     }
+    errors = []
 
     group_action = request.session.get("group_action")
     group_name = request.session.get("group_name")
@@ -121,9 +105,9 @@ def signup_view(request):
         email = context["email"]
         password = request.POST.get("password")
         password_confirm = request.POST.get("password_confirm")
-        errors = collect_signup_errors(name, email, password, password_confirm)
 
-        # エラーが1つ以上あったら、すべて表示して戻す
+        # サインアップのバリデーションエラー
+        errors = collect_signup_errors(name, email, password, password_confirm, errors)
         if errors:
             for error in errors:
                 messages.error(request, error)
@@ -132,34 +116,40 @@ def signup_view(request):
         # グループの作成または参加
         try:
             if group_action == "create":
-                group = create_group(group_name, group_password)
+                group, errors = create_group(group_name, group_password, errors)
             elif group_action == "join":
-                group = join_group(group_name, group_password)
+                group, errors = join_group(group_name, group_password, errors)
             else:
-                raise Exception("不正なグループアクションです")
-        except ValidationError as e:
-            for message in e.messages:
-                messages.error(request, message)
-            return render(request, "signup.html", context)
+                errors = add_error(errors, "invalid_action")
+
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+                return redirect("group_select")
+
         except Exception as e:
-            messages.error(request, str(e))
+            messages.error(request, f"予期しないエラーが発生しました: {str(e)}")
+            for key in ["group_action", "group_name", "group_password"]:
+                request.session.pop(key, None)
             return redirect("group_select")
 
         #ユーザー作成
-        User.objects.create_user(
-            email=email,
-            password=password,
-            name=name,
-            familygroup=group
-        )
+        try:
+            User.objects.create_user(
+                email=email,
+                password=password,
+                name=name,
+                familygroup=group
+            )
 
-        messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
+            messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
+            clear_group_session(request.session)
+            return redirect("home")
 
-        #セッションクリア
-        for key in ["group_action", "group_name", "group_password"]:
-            request.session.pop(key, None)
-
-        return redirect("home")
+        except Exception as e:
+            messages.error(request, f"ユーザー登録中にエラーが発生しました: {str(e)}")
+            clear_group_session(request.session)
+            return redirect("group_select")
 
     return render(request, "signup.html", context)
 
@@ -170,13 +160,14 @@ def login_view(request):
     context = {
         "email": request.POST.get("email", ""),
     }
+    errors = []
 
     if request.method == "POST":
         email = context["email"]
         password = request.POST.get("password", "")
 
         if not email or not password:
-            messages.error(request, "メールアドレスとパスワードを両方入力してください")
+            errors = add_error(errors, "email_and_password_required")
             return render(request, "login.html", context)
 
         user = authenticate(request, email=email, password=password)
@@ -184,7 +175,11 @@ def login_view(request):
             login(request, user)
             return redirect("home")
         else:
-            messages.error(request, "メールアドレスまたはパスワードが間違っています")
+            errors = add_error(errors, "invalid_credentials")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
 
     return render(request, "login.html", context)
 
