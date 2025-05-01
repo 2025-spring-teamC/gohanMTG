@@ -5,8 +5,8 @@ from .models import User, FamilyGroup
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     model = User
-    list_display = ("email", "name", "is_staff", "is_active")
-    list_filter = ("is_staff", "is_active")
+    list_display = ("email", "name", "is_staff", "is_active", "familygroup")
+    list_filter = ("is_staff", "is_active", "familygroup")
     fieldsets = (
         (None, {"fields": ("email", "password", "name", "familygroup")}),
         ("権限", {"fields": ("is_staff", "is_active", "is_superuser", "groups", "user_permissions")}),
