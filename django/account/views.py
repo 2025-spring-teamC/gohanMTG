@@ -1,15 +1,14 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from .models import User, FamilyGroup
-from .validators import validate_secret_word_strength, validate_password_strength, validate_email_format
+from .validators import validate_secret_word_strength
+from .helpers import validate_unique_group_name_and_password, create_group, join_group, collect_signup_errors
 
-
-#グループ選択機能
+# グループ選択機能
 def group_select_view(request):
     context = {
         "action": request.POST.get("action", ""),  # "join" or "create"
@@ -70,11 +69,12 @@ def group_select_view(request):
                 for message in e.messages:
                     errors.append(f"合言葉エラー: {message}")
 
-            # 重複チェック
-            existing_groups = FamilyGroup.objects.filter(name=name)
-            for group in existing_groups:
-                if check_password(password, group.secret_key):
-                    errors.append("そのグループ名と合言葉の組み合わせは既に存在します。")
+            # グループ名と合言葉の重複チェック
+            try:
+                validate_unique_group_name_and_password(name, password)
+            except ValidationError as e:
+                for message in e.messages:
+                    errors.append(message)
 
             if errors:
                 # エラーがある場合、フォームの入力値を保持して再表示
@@ -99,42 +99,7 @@ def group_select_view(request):
     return render(request, "group_select.html", context)
 
 
-def create_group(name, password):
-    """
-    新しいグループを作成する処理
-    """
-
-    # 同じグループ名が存在するかチェック
-    existing_groups = FamilyGroup.objects.filter(name=name)
-    for group in existing_groups:
-        if check_password(password, group.secret_key):
-            raise Exception("そのグループ名と合言葉の組み合わせは既に存在します。")
-
-    # 合言葉のハッシュ化
-    hashed_password = make_password(password)
-
-    # グループ作成
-    group = FamilyGroup.objects.create(
-        name=name,
-        secret_key=hashed_password
-    )
-    return group
-
-
-def join_group(name, password):
-    """
-    既存のグループに参加する処理
-    """
-    try:
-        group = FamilyGroup.objects.get(name=name)
-        if check_password(password, group.secret_key):
-            return group
-        else:
-            raise Exception("合言葉が間違っています。")
-    except FamilyGroup.DoesNotExist:
-        raise Exception("グループが見つかりません。")
-
-#サインアップ機能
+# サインアップ機能
 @transaction.atomic
 def signup_view(request):
     context = {
@@ -156,47 +121,12 @@ def signup_view(request):
         email = context["email"]
         password = request.POST.get("password")
         password_confirm = request.POST.get("password_confirm")
-
-        # 入力エラーをまとめて集める
-        errors = []
-
-        #入力項目チェック
-        if not name:
-            errors.append("名前を入力してください。")
-        if not email:
-            errors.append("メールアドレスを入力してください。")
-        if not password:
-            errors.append("パスワードを入力してください。")
-        if not password_confirm:
-            errors.append("確認用パスワードを入力してください。")
-
-        # バリデーションエラーをまとめて集める
-        try:
-            validate_email_format(email)
-        except ValidationError as e:
-            for message in e.messages:
-                errors.append(f"メールアドレスエラー: {message}")
-
-        if User.objects.filter(email=email).exists():
-            errors.append("そのメールアドレスは既に登録されています。")
-
-        try:
-            validate_password_strength(password)
-        except ValidationError as e:
-            for message in e.messages:
-                errors.append(f"パスワードエラー: {message}")
-
-        if password != password_confirm:
-            errors.append("パスワードと確認用パスワードが一致しません。")
+        errors = collect_signup_errors(name, email, password, password_confirm)
 
         # エラーが1つ以上あったら、すべて表示して戻す
         if errors:
             for error in errors:
                 messages.error(request, error)
-            context.update({
-                "name": name,
-                "email": email,
-            })
             return render(request, "signup.html", context)
 
         # グループの作成または参加
@@ -207,18 +137,27 @@ def signup_view(request):
                 group = join_group(group_name, group_password)
             else:
                 raise Exception("不正なグループアクションです")
+        except ValidationError as e:
+            for message in e.messages:
+                messages.error(request, message)
+            return render(request, "signup.html", context)
         except Exception as e:
             messages.error(request, str(e))
             return redirect("group_select")
 
         #ユーザー作成
-        user = User.objects.create_user(email=email, password=password, name=name, familygroup=group)
+        User.objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+            familygroup=group
+        )
+
         messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
 
         #セッションクリア
         for key in ["group_action", "group_name", "group_password"]:
-            if key in request.session:
-                del request.session[key]
+            request.session.pop(key, None)
 
         return redirect("home")
 
