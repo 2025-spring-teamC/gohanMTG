@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from account import views
+from search.views import wantToEat_view, searchRecipes_view,recipeDetail
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,4 +25,7 @@ urlpatterns = [
     path("signup/", views.signup_view, name="signup"),
     path("login/", views.login_view, name="login"),
     path('logout/', views.logout_view, name='logout'),
+    path("want_eats/<int:group_id>/", wantToEat_view, name="want_to_eat"),
+    path('search_recipes/', searchRecipes_view, name='search_recipes'),
+    path('detail_recipes/<int:recipe_id>/', recipeDetail, name='recipe_detail'),
 ]
