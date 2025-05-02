@@ -23,4 +23,5 @@ urlpatterns = [
     path("group-select/", views.group_select_view, name="group_select"),
     path("signup/", views.signup_view, name="signup"),
     path("login/", views.login_view, name="login"),
+    path('logout/', views.logout_view, name='logout'),
 ]

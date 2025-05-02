@@ -1,12 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, FamilyGroup
+from account import models
 
-@admin.register(User)
+@admin.register(models.User)
 class CustomUserAdmin(UserAdmin):
-    model = User
-    list_display = ("email", "name", "is_staff", "is_active")
-    list_filter = ("is_staff", "is_active")
+    model = models.User
+    list_display = ("email", "name", "is_staff", "is_active", "familygroup")
+    list_filter = ("is_staff", "is_active", "familygroup")
     fieldsets = (
         (None, {"fields": ("email", "password", "name", "familygroup")}),
         ("権限", {"fields": ("is_staff", "is_active", "is_superuser", "groups", "user_permissions")}),
@@ -20,4 +20,4 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ("email", "name")
     ordering = ("email",)
 
-admin.site.register(FamilyGroup)
+admin.site.register(models.FamilyGroup)

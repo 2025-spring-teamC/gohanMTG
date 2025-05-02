@@ -1,38 +1,40 @@
-import re
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.utils.translation import gettext_lazy as _
+from account.errors import add_error
 
 
 # 合言葉のバリデーション
-def validate_secret_word_strength(value):
+def validate_secret_word_strength(value, errors):
     """パスワードの強度をチェックするカスタムバリデータ"""
     if len(value) < 8:
-        raise ValidationError(_('合言葉は8文字以上でなければなりません。'))
+        errors = add_error(errors, "secret_key_too_short")
+
+    return errors
 
 # パスワードのバリデーション
-def validate_password_strength(value):
+def validate_password_strength(value, errors):
     """パスワードの強度をチェックするカスタムバリデータ"""
     if len(value) < 8:
-        raise ValidationError(_('パスワードは8文字以上でなければなりません。'))
+        errors = add_error(errors, "password_too_short")
 
     # if not re.search(r'[a-z]', value):
-    #     raise ValidationError(_('パスワードには少なくとも1つの小文字を含めてください。'))
-
+    #     errors = add_error(errors, "password_missing_lowercase")
     # if not re.search(r'[A-Z]', value):
-    #     raise ValidationError(_('パスワードには少なくとも1つの大文字を含めてください。'))
-
+    #     errors = add_error(errors, "password_missing_uppercase")
     # if not re.search(r'[0-9]', value):
-    #     raise ValidationError(_('パスワードには少なくとも1つの数字を含めてください。'))
-
+    #     errors = add_error(errors, "password_missing_number")
     # if not re.search(r'[@$!%*?&]', value):
-    #     raise ValidationError(_('パスワードには少なくとも1つの特殊文字（例: @$!%*?&）を含めてください。'))
+    #     errors = add_error(errors, "password_missing_special")
+
+    return errors
 
 # メールアドレスのバリデーション
-def validate_email_format(email):
+def validate_email_format(email, errors):
     """メールアドレスの形式をチェック"""
     validator = EmailValidator()
     try:
         validator(email)
     except ValidationError:
-        raise ValidationError("無効なメールアドレス形式です。")
+        errors = add_error(errors, "invalid_email")
+    return errors
