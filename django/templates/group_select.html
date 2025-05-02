@@ -6,35 +6,37 @@
 <!-- タブ切り替え -->
 <div class="border-b">
     <nav class="-mb-px flex space-x-8 grid grid-cols-2" aria-label="Tabs">
-        <button type="button" class="tab-button active-tab" data-tab="create">
+        <button type="button" class="tab-button {% if action == 'create' or action == '' %}active-tab{% endif %}" data-tab="create">
             作成する
         </button>
-        <button type="button" class="tab-button" data-tab="join">
+        <button type="button" class="tab-button {% if action == 'join' %}active-tab{% endif %}" data-tab="join">
             参加する
         </button>
     </nav>
 </div>
 
 <!-- グループ作成フォーム -->
-<div id="create" class="tab-content hidden">
+<div id="create" data-content="create" class="tab-content {% if action == 'create' or action == '' %}active-tab-content{% endif %}">
     <form action="{% url 'group_select' %}" method="post" class="space-y-8 py-6">
         {% csrf_token %}
         <div class="space-y-4">
             {% if messages %}
             <ul class="messages">
                 {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
-                    {% endfor %}
+                <li class="error">{{ message }}</li>
+                {% endfor %}
             </ul>
-            {% endif %}
+            {% endif %} {% if form.errors %} {% endif %}
             <input type="hidden" name="action" value="create">
             <div>
                 <label for="new_group_name" class="form-label">グループ名</label>
-                <input type="text" name="new_group_name" placeholder="新しいグループ名" class="input">
+                <input type="text" id="new_group_name" name="new_group_name" placeholder="新しいグループ名" class="input" value="{{ new_group_name }}">
+                <div class="error-message"></div>
             </div>
             <div>
                 <label for="new_group_password" class="form-label">合言葉</label>
-                <input type="password" name="new_group_password" placeholder="合言葉" class="input">
+                <input type="password" id="new_group_password" name="new_group_password" placeholder="合言葉" class="input" value="{{ new_group_password }}">
+                <div class="error-message"></div>
             </div>
         </div>
         <button type="submit" class="button button-primary">
@@ -43,7 +45,7 @@
     </form>
 </div>
 <!-- グループに参加フォーム -->
-<div id="join" class="tab-content">
+<div id="join" data-content="join" class="tab-content {% if action == 'join' %}active-tab-content{% endif %}">
     <form action="{% url 'group_select' %}" method="post" class="space-y-8 py-6">
         {% csrf_token %}
         <div class="space-y-4">
@@ -57,11 +59,13 @@
             <input type="hidden" name="action" value="join">
             <div>
                 <label for="group_name" class="form-label">グループ名</label>
-                <input type="text" id="group_name" name="group_name" placeholder="グループ名" class="input">
+                <input type="text" id="group_name" name="group_name" placeholder="グループ名" class="input" value="{{ group_name }}">
+                <div class="error-message"></div>
             </div>
             <div>
                 <label for="group_password" class="form-label">合言葉</label>
-                <input type="password" id="group_password" name="group_password" placeholder="合言葉" class="input">
+                <input type="password" id="group_password" name="group_password" placeholder="合言葉" class="input" value="{{ group_password }}">
+                <div class="error-message"></div>
             </div>
         </div>
         <button type="submit" class="button button-primary">
@@ -74,54 +78,7 @@
     <a href="{% url 'login' %}" class="button button-secondary">ログイン</a>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        // 初期状態の設定
-        const urlParams = new URLSearchParams(window.location.search);
-        const initialTab = urlParams.get('tab') || 'create';
-
-        // 初期タブの設定
-        tabButtons.forEach(btn => {
-            if (btn.getAttribute('data-tab') === initialTab) {
-                btn.classList.add('active-tab');
-            } else {
-                btn.classList.remove('active-tab');
-            }
-        });
-
-        // 初期コンテンツの表示
-        tabContents.forEach(content => {
-            if (content.id === initialTab) {
-                content.classList.remove('hidden');
-            } else {
-                content.classList.add('hidden');
-            }
-        });
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // タブボタンのアクティブ状態を切り替え
-                tabButtons.forEach(btn => btn.classList.remove('active-tab'));
-                button.classList.add('active-tab');
-
-                // タブコンテンツの表示/非表示を切り替え
-                const tabId = button.getAttribute('data-tab');
-                tabContents.forEach(content => {
-                    content.classList.add('hidden');
-                    if (content.id === tabId) {
-                        content.classList.remove('hidden');
-                    }
-                });
-
-                // URLにタブの状態を反映
-                const url = new URL(window.location.href);
-                url.searchParams.set('tab', tabId);
-                window.history.pushState({}, '', url);
-            });
-        });
-    });
-</script>
-{% endblock %}
+{% block extra_js %} {% load static %}
+<script src="{% static 'js/group_select/tabs.js' %}"></script>
+<script src="{% static 'js/group_select/validation.js' %}"></script>
+{% endblock %} {% endblock %}

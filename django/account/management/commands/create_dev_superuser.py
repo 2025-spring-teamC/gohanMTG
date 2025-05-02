@@ -12,10 +12,11 @@ class Command(BaseCommand):
         email = os.getenv("DJANGO_SUPERUSER_EMAIL", "admin@example.com")
         password = os.getenv("DJANGO_SUPERUSER_PASSWORD", "password")
         family_name = os.getenv("DJANGO_SUPERUSER_FAMILY", "開発")
+        group_password = os.getenv("DJANGO_SUPERUSER_FAMILY_PASSWORD", "family_password")
         name = os.getenv("DJANGO_SUPERUSER_NAME", "Admin")
 
         if not FamilyGroup.objects.filter(name=family_name).exists():
-            family = FamilyGroup.objects.create(name=family_name)
+            family = FamilyGroup.objects.create(name=family_name, secret_key=group_password)
             self.stdout.write(self.style.SUCCESS(f"FamilyGroup created: {family_name}"))
         else:
             family = FamilyGroup.objects.get(name=family_name)
