@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.utils.translation import gettext_lazy as _
-from .errors import add_error
+from account.errors import add_error
 
 
 # 合言葉のバリデーション
