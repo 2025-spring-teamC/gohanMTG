@@ -1,3 +1,4 @@
+
 """
 Django settings for gohanMTG project.
 
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'account',
+    'search',
 ]
 
 MIDDLEWARE = [
