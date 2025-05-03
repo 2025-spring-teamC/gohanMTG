@@ -1,0 +1,150 @@
+{% extends 'util/layout.html' %} {% block title %}レシピ検索 {% endblock %} {% block content %}
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-44">
+    <!-- Search Form -->
+    <div class="bg-background rounded-lg shadow-md p-6 mb-8">
+        <form action="{% url 'search_recipes' %}" method="get" class="space-y-4">
+            <div class="grid grid-cols-[1fr_auto] gap-1 items-center">
+                <div class="relative">
+                    <input type="text" id="category-input" class="input" placeholder="カテゴリー検索...">
+                    <select id="category" class="hidden" name="search" default="{{ search }}">
+                        <option value="">選択してください</option>
+                        {% for category in categories %}
+                            <option value="{{ category.categoryName }}">{{ category.categoryName }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="category-dropdown" class="absolute z-10 w-48 mt-1 bg-background rounded-md shadow-lg max-h-60 overflow-auto hidden">
+                        <!-- オプションがここに動的に追加される -->
+                    </div>
+                </div>
+                <button type="submit" class="button button-secondary translate-y-px">
+                    <i class="fas fa-search mr-1"></i>検索する
+                </button>
+            </div>
+        </form>
+    </div>
+    <!-- Search Results -->
+    <div id="search-results" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-2 md:gap-6">
+        {% if foods %} {% for food in foods %}
+        <div class="bg-background rounded-lg shadow-md overflow-hidden">
+            <a href="{% url 'recipe_detail' food.recipeId %}" class="block hover:opacity-90 transition-opacity h-full">
+                <div class="bg-background h-full grid grid-rows-[auto_1fr]">
+                    <img src="{{ food.foodImageUrl }}" alt="{{ food.recipeName }}" class="w-full  max-h-38 md:max-h-60 object-cover">
+                    <div class="p-4 w-full space-y-2 flex flex-col ">
+                        <h3 class="text-base md:text-lg font-semibold leading-tight line-clamp-2 font-mono">{{ food.recipeTitle }}</h3>
+                        <p class="text-muted-foreground text-sm line-clamp-3">{{ food.recipeDescription }}</p>
+                        <div class="flex items-center overflow-hidden gap-x-1 mt-auto ">
+                            <img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={{ food.recipeUrl }}&size=16" class="size-4">
+                            <p class="text-gray-600 text-[12px] line-clamp-1 w-full break-all">{{ food.recipeUrl }}</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %} {% endif %}
+
+    </div>
+
+</main>
+
+
+<script>
+    // コンボボックスの機能を実装
+    function setupComboBox() {
+        const input = document.getElementById('category-input');
+        const select = document.getElementById('category');
+        const dropdown = document.getElementById('category-dropdown');
+
+        // 入力フィールドにフォーカスした時の処理
+        input.addEventListener('focus', () => {
+            updateDropdownOptions();
+            dropdown.classList.remove('hidden');
+        });
+
+        // 入力フィールドの値が変更された時の処理
+        input.addEventListener('input', () => {
+            updateDropdownOptions();
+            dropdown.classList.remove('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // ドロップダウンのオプションを更新
+        function updateDropdownOptions() {
+            const searchTerm = input.value.toLowerCase();
+            const options = Array.from(select.options);
+
+            // 検索語が空の場合は全てのオプションを表示
+            if (!searchTerm) {
+                let html = '';
+
+                options.forEach(option => {
+                    if (option.value) {
+                        html += `
+                  <div class="px-4 py-2 hover:bg-primary/10 cursor-pointer border-t border-border first:border-t-0" 
+                       data-value="${option.value}"
+                       onclick="selectOption('${option.value}', '${option.text}')">
+                    <div class="text-sm">${option.text}</div>
+                  </div>
+                `;
+                    }
+                });
+
+                dropdown.innerHTML = html;
+                return;
+            }
+
+            // 検索語がある場合はフィルタリングして表示
+            let filteredHtml = '';
+
+            options.forEach(option => {
+                if (option.value && option.text.toLowerCase().includes(searchTerm)) {
+                    filteredHtml += `
+                <div class="px-4 py-2 hover:bg-primary/10 cursor-pointer border-t border-border first:border-t-0" 
+                     data-value="${option.value}"
+                     onclick="selectOption('${option.value}', '${option.text}')">
+                  <div class="text-sm">${option.text}</div>
+                </div>
+              `;
+                }
+            });
+
+            dropdown.innerHTML = filteredHtml;
+        }
+    }
+
+    // オプションを選択した時の処理
+    function selectOption(value, text) {
+        const input = document.getElementById('category-input');
+        const select = document.getElementById('category');
+        const dropdown = document.getElementById('category-dropdown');
+
+        input.value = text;
+        select.value = value;
+        dropdown.classList.add('hidden');
+    }
+
+    // ページ読み込み時にコンボボックスをセットアップ
+    window.onload = function() {
+        setupComboBox();
+
+        // デフォルト値の設定
+        const select = document.getElementById('category');
+        const input = document.getElementById('category-input');
+        const defaultSearch = select.getAttribute('default');
+
+        if (defaultSearch) {
+            const option = Array.from(select.options).find(opt => opt.value === defaultSearch);
+            if (option) {
+                input.value = option.text;
+                select.value = defaultSearch;
+            }
+        }
+    };
+</script>
+
+{% endblock %}

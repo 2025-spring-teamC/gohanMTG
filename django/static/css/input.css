@@ -57,16 +57,16 @@ body {
         color: var(--primary);
     }
     .form-label {
-        @apply block text-sm font-medium text-muted-foreground;
+        @apply block text-sm font-medium text-muted-foreground mb-1;
     }
     .input {
-        @apply mt-1 block w-full px-3 py-2 border border-input rounded-md shadow-sm;
+        @apply block w-full px-3 py-2 border border-input rounded-md shadow-sm;
     }
     .input:focus {
         @apply outline-none ring-primary border-primary;
     }
     .button {
-        @apply w-full block text-center py-2 px-4 rounded-full;
+        @apply w-full flex text-center py-2 px-4 rounded-full items-center justify-center;
     }
     .button-primary {
         @apply bg-primary text-primary-foreground;
@@ -75,7 +75,7 @@ body {
         @apply bg-primary/80;
     }
     .button-primary:focus {
-        @apply outline-none ring-primary ring-2;
+        @apply outline-none ring-primary ring-1;
     }
     .button-secondary {
         @apply border border-primary text-primary
@@ -84,7 +84,16 @@ body {
         @apply bg-primary/10;
     }
     .button-secondary:focus {
-        @apply outline-none ring-primary ring-2;
+        @apply outline-none ring-primary ring-1;
+    }
+    .button-destructive {
+        @apply border border-destructive text-destructive bg-background
+    }
+    .button-destructive:hover {
+        @apply bg-destructive/10;
+    }
+    .button-destructive:focus {
+        @apply outline-none ring-destructive ring-1;
     }
     .tab-button {
         @apply border-b-2 border-transparent whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm w-full;
