@@ -22,5 +22,8 @@ RUN npm install
 
 COPY . /code
 
-RUN groupadd -g $GID mygroup && useradd -m -u $UID -g $GID myuser
+RUN groupadd -g $GID mygroup && \
+  useradd -m -u $UID -g $GID myuser && \
+  mkdir -p /code/nginx/static && \
+  chown -R myuser:mygroup /code/nginx/static
 USER myuser
