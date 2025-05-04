@@ -3,17 +3,17 @@
 
 <head>
     {% block head %} {% load static %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <title>{% block title %}{% endblock %} - うちのごはん会議</title>
     {% endblock %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
-<body class="bg-background-muted grid grid-rows-[auto_1fr_auto] h-full">
+<body class="bg-background-muted grid grid-rows-[auto_minmax(0,1fr)_auto] h-screen h-svh overflow-hidden">
     {% include "util/header.html" %}
-    <div id="content" class="bg-background-muted  min-w-screen">{% block content %}{% endblock %}</div>
-    <div id="footer" class="text-center text-muted-foreground">
-        {% block footer %} &copy; Copyright 2025 by <a href="http://gohanmtg.com/">うちのごはん会議</a>. {% endblock %}
-    </div>
+    <div id="content" class="bg-background-muted  min-w-screen h-full overflow-y-auto">{% block content %}{% endblock %}</div>
+    {% block extra_js %}{% endblock %} {% include "util/footer-navigation.html" %}
 </body>
 
 </html>
