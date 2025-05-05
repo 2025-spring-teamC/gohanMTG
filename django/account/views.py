@@ -133,18 +133,19 @@ def signup_view(request):
 
         #ユーザー作成
         try:
-            models.User.objects.create_user(
+            user = models.User.objects.create_user(
                 email=email,
                 password=password,
                 name=name,
                 familygroup=group
             )
 
-            messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
             helpers.clear_group_session(request.session)
-            return redirect("want_to_eat", group_id=models.User.familygroup.id)
+            login(request, user)
+            return redirect("want_to_eat", group_id=group.id)
 
         except Exception as e:
+            transaction.set_rollback(True)
             messages.error(request, f"ユーザー登録中にエラーが発生しました: {str(e)}")
             helpers.clear_group_session(request.session)
             return redirect("group_select")
