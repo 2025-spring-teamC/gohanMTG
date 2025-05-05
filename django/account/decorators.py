@@ -1,5 +1,4 @@
 from functools import wraps
-from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.contrib import messages
 
@@ -18,8 +17,9 @@ def group_access_required(view_func):
             messages.error(request, "ログインし直してください。")
             return redirect("login")
 
-        if request.user.familygroup_id != group_id:
-            return HttpResponseForbidden("このグループにはアクセスできません。")
+        if int(request.user.familygroup_id) != int(group_id):
+            messages.error(request, "このグループにはアクセスできません。")
+            return redirect("login")
 
         return view_func(request, group_id, *args, **kwargs)
     return _wrapped_view
