@@ -142,7 +142,7 @@ def signup_view(request):
 
             messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
             helpers.clear_group_session(request.session)
-            return redirect("home")
+            return redirect("want_to_eat", group_id=models.User.familygroup.id)
 
         except Exception as e:
             messages.error(request, f"ユーザー登録中にエラーが発生しました: {str(e)}")
@@ -171,7 +171,7 @@ def login_view(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            return redirect("home")
+            return redirect("want_to_eat", group_id=user.familygroup.id)
         else:
             errors = add_error(errors, "invalid_credentials")
 
