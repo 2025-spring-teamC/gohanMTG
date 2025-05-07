@@ -138,3 +138,12 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# 認証・ログイン設定
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "want_to_eat"
+LOGOUT_REDIRECT_URL = "login"
+
+# セッション設定
+SESSION_SAVE_EVERY_REQUEST = True
