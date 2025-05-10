@@ -142,7 +142,7 @@ def signup_view(request):
 
             helpers.clear_group_session(request.session)
             login(request, user)
-            return redirect("want_to_eat", group_id=group.id)
+            return redirect("want_to_eat")
 
         except Exception as e:
             transaction.set_rollback(True)
@@ -172,7 +172,7 @@ def login_view(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            return redirect("want_to_eat", group_id=user.familygroup.id)
+            return redirect("want_to_eat")
         else:
             errors = add_error(errors, "invalid_credentials")
 
