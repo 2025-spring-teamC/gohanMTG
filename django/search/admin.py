@@ -1,20 +1,20 @@
 from django.contrib import admin
-from search.models import Recipes, Group_recipes, User_recipes
+from search.models import Recipe, Group_recipe, User_recipe
 
-@admin.register(Recipes)
+@admin.register(Recipe)
 class RecipesAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category_id', 'url', 'created_at', 'updated_at')
-    search_fields = ('name', 'category_id')
+    list_display = ('user', 'url', 'created_at', 'updated_at')
+    search_fields = ('user',)
 
 
-@admin.register(Group_recipes)
+@admin.register(Group_recipe)
 class GroupRecipesAdmin(admin.ModelAdmin):
     list_display = ('group', 'recipe', 'user', 'created_at')
     list_filter = ('group', 'user')
     search_fields = ('group__name', 'recipe__name', 'user__name')
 
 
-@admin.register(User_recipes)
+@admin.register(User_recipe)
 class UserRecipesAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe', 'created_at')
     list_filter = ('user',)

@@ -4,7 +4,7 @@ from urllib.request import urlopen
 from django.shortcuts import render, get_object_or_404
 from collections import defaultdict
 from account.models import FamilyGroup, User
-from search.models import Recipes, Group_recipes, User_recipes
+from search.models import Recipe, Group_recipe, User_recipe
 from django.contrib.auth.decorators import login_required
 from account.decorators import group_access_required
 
@@ -61,13 +61,13 @@ def wantToEat_view(request):
         print("[ERROR] グループが見つかりません。", e)
 
     # DBからデータ取得
-    entries = Group_recipes.objects.filter(group=group)
+    entries = Group_recipe.objects.filter(group=group)
 
     # レシピごとにユーザー情報と登録日時まとめる
     recipe_info = defaultdict(list)
     for entry in entries:
         recipe_info[entry.recipe.url].append({
-            "recipe_name": entry.recipe.name,
+            "recipe_name": entry.recipe.url,
             "user": entry.user.name,
             "registered_at": entry.created_at,
         })
