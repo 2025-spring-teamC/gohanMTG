@@ -133,18 +133,19 @@ def signup_view(request):
 
         #ユーザー作成
         try:
-            models.User.objects.create_user(
+            user = models.User.objects.create_user(
                 email=email,
                 password=password,
                 name=name,
                 familygroup=group
             )
 
-            messages.success(request, "ユーザー登録が完了しました。ログインしてください。")
             helpers.clear_group_session(request.session)
-            return redirect("home")
+            login(request, user)
+            return redirect("want_to_eat")
 
         except Exception as e:
+            transaction.set_rollback(True)
             messages.error(request, f"ユーザー登録中にエラーが発生しました: {str(e)}")
             helpers.clear_group_session(request.session)
             return redirect("group_select")
@@ -171,7 +172,7 @@ def login_view(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            return redirect("home")
+            return redirect("want_to_eat")
         else:
             errors = add_error(errors, "invalid_credentials")
 
