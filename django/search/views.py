@@ -1,37 +1,90 @@
-import os, random, json, unicodedata
+import os, random, json, unicodedata, requests
+from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from django.shortcuts import render, get_object_or_404
 from collections import defaultdict
 from account.models import FamilyGroup, User
-from search.models import Recipes, Group_recipes, User_recipes
+from search.models import Recipe, Group_recipe, User_recipe
+from django.contrib.auth.decorators import login_required
+from account.decorators import group_access_required
 
+
+
+# レシピURLからimage, title, descriptionの情報を抽出する機能
+def recipeURLscraping(url):
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # image抽出
+        recipe_image_tag = soup.find("meta", property="og:image")
+        recipe_image_url = recipe_image_tag["content"] if recipe_image_tag else None
+
+        # title抽出
+        recipe_title_tag = soup.find("meta", property="og:title")
+        recipe_title = recipe_title_tag["content"] if recipe_title_tag else soup.title.string if soup.title else ""
+        # 投稿者名が入っているため除外
+        if "by" in recipe_title:
+            recipe_title = recipe_title.split("by")[0].strip()
+        # 「レシピ・作り方」を除外
+        recipe_title = recipe_title.replace("レシピ・作り方", "").strip()
+
+        # description抽出
+        recipe_description_tag = soup.find("meta", property="og:description")
+        recipe_description = recipe_description_tag["content"] if recipe_description_tag else ""
+
+        return {
+            "image": recipe_image_url,
+            "title": recipe_title,
+            "description": recipe_description
+        }
+
+    except Exception as e:
+        return {
+            "image": None,
+            "title": "",
+            "description": ""
+        }
 
 
 #食べたいものリスト画面表示機能
-def wantToEat_view(request, group_id):
+@login_required
+#@group_access_required
+def wantToEat_view(request):
+
+    user = request.user
+
+    try:
+        group = user.familygroup
+    except FamilyGroup.DoesNotExist as e:
+        print("[ERROR] グループが見つかりません。", e)
 
     # DBからデータ取得
-    group = get_object_or_404(FamilyGroup, id=group_id)
-    entries = Group_recipes.objects.filter(group=group)
+    entries = Group_recipe.objects.filter(group=group)
 
     # レシピごとにユーザー情報と登録日時まとめる
     recipe_info = defaultdict(list)
     for entry in entries:
         recipe_info[entry.recipe.url].append({
-            "recipe_name": entry.recipe.name,
+            "recipe_name": entry.recipe.url,
             "user": entry.user.name,
             "registered_at": entry.created_at,
         })
 
     # 表示しやすいように整形
-    want_list = [
-        {
+    want_list = []
+    for url, infos in recipe_info.items():
+        scraping_data = recipeURLscraping(url)
+
+        want_list.append({
             "url": url,
             "recipe_name": infos[0]["recipe_name"],
-            "entries": infos
-        }
-        for url, infos in recipe_info.items()
-    ]
+            "entries": infos,
+            "image": scraping_data["image"],
+            "title": scraping_data["title"],
+            "description": scraping_data["description"]
+        })
 
     context = {
         "group": group,
@@ -45,7 +98,8 @@ def fetch_json(url):
     with urlopen(url) as response:
         return json.loads(response.read().decode())
 
-# カテゴリー一覧を整形
+
+# カテゴリー一覧を整形する機能
 def category_hierarchy(json_data):
     parent_dict = {}
     category_list = []
@@ -88,7 +142,9 @@ def category_hierarchy(json_data):
 
     return category_list
 
+
 # レシピ検索画面表示＆検索機能
+@login_required
 def searchRecipes_view(request):
 
     application_id = os.environ.get('RAKUTEN_APPLICATION_ID')
@@ -113,7 +169,6 @@ def searchRecipes_view(request):
             hit = False
         else:
             selected = random.choice(categories_list)
-            print(f"選択されたカテゴリ: {selected['categoryName']} ({selected['categoryId']})")
             category_id = selected["categoryId"]
             rank_url = f"https://app.rakuten.co.jp/services/api/Recipe/CategoryRanking/20170426?applicationId={application_id}&categoryId={category_id}"
             try:
@@ -138,6 +193,7 @@ def searchRecipes_view(request):
 
 
 # レシピ詳細画面表示機能
+@login_required
 def recipeDetail(request, recipe_id):
     foods = request.session.get('foods', [])
 
