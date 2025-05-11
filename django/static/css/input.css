@@ -12,6 +12,11 @@
     --color-muted-foreground: var(--muted-foreground);
     --color-destructive-foreground: var(--destructive-foreground);
     --color-primary-foreground: var(--primary-foreground);
+    --color-user-icon-1: var(--user-icon-1);
+    --color-user-icon-2: var(--user-icon-2);
+    --color-user-icon-3: var(--user-icon-3);
+    --color-user-icon-4: var(--user-icon-4);
+    --color-user-icon-5: var(--user-icon-5);
 }
 
 :root {
@@ -27,6 +32,11 @@
     --muted-foreground: oklch(0.552 0.016 285.938);
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.982 0.018 155.826);
+    --user-icon-1: oklch(85% 0.12 111.08);
+    --user-icon-2: oklch(85% 0.12 145.08);
+    --user-icon-3: oklch(85% 0.12 220.08);
+    --user-icon-4: oklch(85% 0.12 295.08);
+    --user-icon-5: oklch(85% 0.12 370.08);
 }
 
 body {
