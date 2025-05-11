@@ -1,11 +1,40 @@
-<header class="bg-background shadow">
+{% load static %}
+<header class="bg-background shadow relative">
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
             <div class="flex items-center gap-4"></div>
-            <h1 class="text-xl font-bold text-primary font-mono">うちのごはん会議</h1>
-            <button class="text-primary hover:text-primary">
-          <i class="fas fa-bars"></i>
-        </button>
+            <div class="flex items-center">
+                <h1 class="text-xl font-bold text-primary font-mono">うちのごはん会議</h1>
+            </div>
+            <div class="relative">
+                <button id="menuButton" class="text-primary hover:text-primary">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div id="menuDropdown" class="hidden absolute right-0 mt-2 w-48 bg-background rounded-md shadow-lg py-1 z-10">
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-muted-foreground hover:bg-background-muted">
+                        <i class="fas fa-sign-out-alt mr-2"></i>ログアウト
+                    </a>
+                </div>
+            </div>
+
         </div>
     </div>
 </header>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuButton = document.getElementById('menuButton');
+        const menuDropdown = document.getElementById('menuDropdown');
+
+        menuButton.addEventListener('click', function() {
+            menuDropdown.classList.toggle('hidden');
+        });
+
+        // メニュー外をクリックしたら閉じる
+        document.addEventListener('click', function(event) {
+            if (!menuButton.contains(event.target) && !menuDropdown.contains(event.target)) {
+                menuDropdown.classList.add('hidden');
+            }
+        });
+    });
+</script>
