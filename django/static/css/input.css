@@ -47,6 +47,18 @@ body {
 }
 
 @layer components {
+    .auth-background {
+        background-image: url('../image/background.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    @media (min-width: 768px) {
+        .auth-background {
+            background-size: auto;
+            background-repeat: repeat;
+        }
+    }
     .heading1 {
         @apply text-xl font-bold text-primary;
     }

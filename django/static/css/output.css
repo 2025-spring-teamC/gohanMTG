@@ -237,6 +237,9 @@
   .-mb-px {
     margin-bottom: -1px;
   }
+  .mb-2 {
+    margin-bottom: calc(var(--spacing) * 2);
+  }
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
   }
@@ -287,6 +290,15 @@
   .h-6 {
     height: calc(var(--spacing) * 6);
   }
+  .h-12 {
+    height: calc(var(--spacing) * 12);
+  }
+  .h-14 {
+    height: calc(var(--spacing) * 14);
+  }
+  .h-16 {
+    height: calc(var(--spacing) * 16);
+  }
   .h-64 {
     height: calc(var(--spacing) * 64);
   }
@@ -304,6 +316,9 @@
   }
   .max-h-60 {
     max-height: calc(var(--spacing) * 60);
+  }
+  .min-h-screen {
+    min-height: 100vh;
   }
   .w-6 {
     width: calc(var(--spacing) * 6);
@@ -746,6 +761,18 @@ body {
   font-family: 'Noto Sans JP', sans-serif;
 }
 @layer components {
+  .auth-background {
+    background-image: url('../image/background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  @media (min-width: 768px) {
+    .auth-background {
+      background-size: auto;
+      background-repeat: repeat;
+    }
+  }
   .heading1 {
     font-size: var(--text-xl);
     line-height: var(--tw-leading, var(--text-xl--line-height));

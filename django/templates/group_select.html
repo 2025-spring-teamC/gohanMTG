@@ -1,16 +1,14 @@
 {% extends 'util/layout-auth.html' %} {% block title %}グループ選択 {% endblock %} {% block content %}
-<div class="text-center mb-8">
-    <h1 class="heading1">グループ</h1>
-</div>
+
 
 <!-- タブ切り替え -->
 <div class="border-b">
     <nav class="-mb-px flex space-x-8 grid grid-cols-2" aria-label="Tabs">
         <button type="button" class="tab-button {% if action == 'create' or action == '' %}active-tab{% endif %}" data-tab="create">
-            作成する
+            グループ作成
         </button>
         <button type="button" class="tab-button {% if action == 'join' %}active-tab{% endif %}" data-tab="join">
-            参加する
+            グループ参加
         </button>
     </nav>
 </div>
