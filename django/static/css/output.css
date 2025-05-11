@@ -287,9 +287,6 @@
   .h-6 {
     height: calc(var(--spacing) * 6);
   }
-  .h-16 {
-    height: calc(var(--spacing) * 16);
-  }
   .h-64 {
     height: calc(var(--spacing) * 64);
   }
@@ -746,6 +743,7 @@ body {
   background-color: var(--background-muted);
   color: var(--foreground);
   height: 100vh;
+  font-family: 'Noto Sans JP', sans-serif;
 }
 @layer components {
   .heading1 {

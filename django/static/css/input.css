@@ -43,6 +43,7 @@ body {
     background-color: var(--background-muted);
     color: var(--foreground);
     height: 100vh;
+    font-family: 'Noto Sans JP', sans-serif;
 }
 
 @layer components {
