@@ -12,13 +12,18 @@
     --color-muted-foreground: var(--muted-foreground);
     --color-destructive-foreground: var(--destructive-foreground);
     --color-primary-foreground: var(--primary-foreground);
+    --color-user-icon-1: var(--user-icon-1);
+    --color-user-icon-2: var(--user-icon-2);
+    --color-user-icon-3: var(--user-icon-3);
+    --color-user-icon-4: var(--user-icon-4);
+    --color-user-icon-5: var(--user-icon-5);
 }
 
 :root {
     --foreground: oklch(0.141% 0.005 285.823);
     --background: oklch(1 0 0);
     --background-muted: oklch(0.96 0.0032 197.1);
-    --primary: oklch(76.9% 0.188 70.08);
+    --primary: oklch(0.7 0.1782 46.96);
     --primary-foreground: oklch(0.982 0.018 155.826);
     --border: oklch(87.2% 0.01 258.338);
     --input: oklch(87.2% 0.01 258.338);
@@ -27,15 +32,33 @@
     --muted-foreground: oklch(0.552 0.016 285.938);
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.982 0.018 155.826);
+    --user-icon-1: oklch(85% 0.12 111.08);
+    --user-icon-2: oklch(85% 0.12 145.08);
+    --user-icon-3: oklch(85% 0.12 220.08);
+    --user-icon-4: oklch(85% 0.12 295.08);
+    --user-icon-5: oklch(85% 0.12 370.08);
 }
 
 body {
     background-color: var(--background-muted);
     color: var(--foreground);
     height: 100vh;
+    font-family: 'Noto Sans JP', sans-serif;
 }
 
 @layer components {
+    .auth-background {
+        background-image: url('../image/background.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    @media (min-width: 768px) {
+        .auth-background {
+            background-size: auto;
+            background-repeat: repeat;
+        }
+    }
     .heading1 {
         @apply text-xl font-bold text-primary;
     }
