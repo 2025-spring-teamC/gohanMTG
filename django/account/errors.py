@@ -22,6 +22,10 @@ ERROR_MESSAGES = {
     "email_and_password_required": "メールアドレスとパスワードを両方入力してください",
     "invalid_credentials": "メールアドレスまたはパスワードが間違っています",
 
+    # update
+    "current_password_required": "現在のパスワードを入力して下さい。",
+    "current_password_incorrect":"現在のパスワードが間違っています。",
+
     # バリデーション
     "secret_key_too_short": "合言葉は8文字以上でなければなりません。",
     "password_too_short": "パスワードは8文字以上でなければなりません。",

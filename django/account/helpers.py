@@ -86,3 +86,39 @@ def collect_signup_errors(name, email, password, password_confirm, errors):
 def clear_group_session(session):
     for key in ["group_action", "group_name", "group_password"]:
         session.pop(key, None)
+
+
+# 名前の更新
+def update_name(user, name, errors):
+    if not name:
+        errors = add_error(errors, "name_required")
+    else:
+        user.name = name
+    return errors
+
+
+# メールアドレスの更新
+def update_email(user, email, errors):
+    if not email:
+        errors = add_error(errors, "email_required")
+    elif User.objects.exclude(pk=user.pk).filter(email=email).exists():
+        errors = add_error(errors, "email_taken")
+    else:
+        user.email = email
+    return errors
+
+
+# パスワード更新
+def update_password(user, current_password, new_password, new_password_confirm, errors):
+    if not current_password:
+        errors = add_error(errors, "current_password_required")
+    elif not check_password(current_password, user.password):
+        errors = add_error(errors, "current_password_incorrect")
+    elif new_password != new_password_confirm:
+        errors = add_error(errors, "password_mismatch")
+    else:
+        errors = validate_password_strength(new_password, errors)
+
+    if not errors:
+        user.set_password(new_password)
+    return errors
