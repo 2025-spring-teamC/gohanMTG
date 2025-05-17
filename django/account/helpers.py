@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from account.models import User, FamilyGroup
 from account.validators import validate_password_strength, validate_email_format
 from account.errors import add_error
+import random
 
 # グループ名と合言葉の組み合わせが重複しないようにチェック
 def validate_unique_group_name_and_password(name, password, errors):
@@ -81,6 +82,27 @@ def collect_signup_errors(name, email, password, password_confirm, errors):
         errors = add_error(errors, "password_mismatch")
 
     return errors
+
+
+# ユーザーアイコン
+ICON_CANDIDATES = [
+    str(i) for i in range(1, 11) # 1~10の連番(画像ファイルの名前を1~10にする)
+]
+
+def get_unique_icon_for_group(group):
+    # すでに使用されているicon_codeを取得
+    used_icons = User.objects.filter(familygroup=group).values_list("icon_code", flat=True)
+
+    # 未使用のアイコンを取得
+    available_icons = list(set(ICON_CANDIDATES) - set(used_icons))
+
+    # 使えるアイコンがあればランダムに返す
+    if available_icons:
+        return random.choice(available_icons)
+    else:
+    # 全て使用済み → 重複OKでランダムに
+        return random.choice(ICON_CANDIDATES)
+
 
 # セッションクリア
 def clear_group_session(session):

@@ -68,6 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     name = models.CharField(verbose_name="ユーザー名", max_length=50, null=False, blank=False)
     email = models.EmailField(verbose_name="メールアドレス", max_length=254, null=False, unique=True)
+    icon_code = models.CharField(max_length=20, blank=True, null=True)
     created_at = models.DateTimeField(verbose_name="登録日", default=timezone.now)
     updated_at = models.DateTimeField(verbose_name="更新日時", auto_now=True)
 

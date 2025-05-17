@@ -133,12 +133,15 @@ def signup_view(request):
             return redirect("group_select")
 
         #ユーザー作成
+        icon_code = helpers.get_unique_icon_for_group(group)
+
         try:
             user = models.User.objects.create_user(
                 email=email,
                 password=password,
                 name=name,
-                familygroup=group
+                familygroup=group,
+                icon_code=icon_code,
             )
 
             helpers.clear_group_session(request.session)
