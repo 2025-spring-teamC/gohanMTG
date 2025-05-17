@@ -191,45 +191,45 @@ def logout_view(request):
     return redirect('login')
 
 
-# マイページ画面処理
-@login_required
-def mypage_view(request):
-    user = request.user
-    context = {
-        "name": user.name,
-        "email": user.email,
-    }
-    errors = []
+# # マイページ画面処理
+# @login_required
+# def mypage_view(request):
+#     user = request.user
+#     context = {
+#         "name": user.name,
+#         "email": user.email,
+#     }
+#     errors = []
 
-    if request.method == "POST":
-        name = request.POST.get("name", "").strip()
-        email = request.POST.get("email", "").strip()
-        current_password = request.POST.get("current_password", "")
-        new_password = request.POST.get("new_password", "")
-        new_password_confirm = request.POST.get("new_password_confirm", "")
+#     if request.method == "POST":
+#         name = request.POST.get("name", "").strip()
+#         email = request.POST.get("email", "").strip()
+#         current_password = request.POST.get("current_password", "")
+#         new_password = request.POST.get("new_password", "")
+#         new_password_confirm = request.POST.get("new_password_confirm", "")
 
-        # 各更新処理を呼び出し
-        errors = helpers.update_name(user, name, errors)
-        errors = helpers.update_email(user, email, errors)
+#         # 各更新処理を呼び出し
+#         errors = helpers.update_name(user, name, errors)
+#         errors = helpers.update_email(user, email, errors)
 
-        if new_password or new_password_confirm:
-            errors = helpers.update_password(user, current_password, new_password, new_password_confirm, errors)
+#         if new_password or new_password_confirm:
+#             errors = helpers.update_password(user, current_password, new_password, new_password_confirm, errors)
 
-        if errors:
-            for error in errors:
-                messages.error(request, error)
-            context.update({"name": name, "email": email})
-            return render(request, "mypage.html", context)
+#         if errors:
+#             for error in errors:
+#                 messages.error(request, error)
+#             context.update({"name": name, "email": email})
+#             return render(request, "mypage.html", context)
 
-        # 変更保存
-        user.save()
-        if new_password:
-            update_session_auth_hash(request, user)
+#         # 変更保存
+#         user.save()
+#         if new_password:
+#             update_session_auth_hash(request, user)
 
-        messages.success(request, "ユーザー情報を更新しました。")
-        return redirect("mypage")
+#         messages.success(request, "ユーザー情報を更新しました。")
+#         return redirect("mypage")
 
-    return render(request, "mypage.html", context)
+#     return render(request, "mypage.html", context)
 
 
 #追い出し処理
