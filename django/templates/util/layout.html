@@ -2,12 +2,8 @@
 <html>
 
 <head>
-    {% block head %} {% load static %}
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    {% include "util/head.html" %}
     <title>{% block title %}{% endblock %} - うちのごはん会議</title>
-    {% endblock %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body class="bg-background-muted grid grid-rows-[auto_minmax(0,1fr)_auto] h-screen h-svh overflow-hidden">

@@ -1,8 +1,4 @@
 {% extends 'util/layout-auth.html' %} {% block title %}ログイン {% endblock %} {% block content %}
-<div class="text-center mb-8">
-    <h1 class="heading1">ログイン</h1>
-</div>
-
 <form action="{% url 'login' %}" method="post" class="space-y-8" novalidate>
     {% csrf_token %} {% if messages %}
     <ul class="messages">

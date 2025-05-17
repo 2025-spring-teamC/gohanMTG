@@ -1,0 +1,68 @@
+{% extends 'util/layout.html' %} {% block title %}食べたいものリスト{% endblock %} {% block content %}
+
+<main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-auto px-4 sm:px-6 lg:px-8 py-10 max-w-7xl">
+    {% if recipe_list %} {% for recipe in recipe_list %}
+    <div class="bg-background/80 rounded-lg shadow-md overflow-hidden grid grid-rows-[1fr_auto]">
+        <a href="{{ recipe.url }}" target="_blank" class="block hover:scale-102 transition-all duration-300 border-b border-border">
+            <div class="bg-background grid grid-cols-[minmax(100px,1fr)_auto] md:grid-cols-1">
+                <img src="{{ recipe.image }}" alt="{{ recipe.recipe_name }}" class="w-full h-full md:max-h-48 object-cover">
+                <div class="p-4 w-full">
+                    <h3 class="text-base md:text-lg font-semibold font-mono leading-tight line-clamp-2">{{ recipe.title }}</h3>
+                    <p class=" text-sm mt-1 line-clamp-3">{{ recipe.description }}</p>
+                    <div class="flex items-center overflow-hidden gap-x-1 mt-2">
+                        <img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={{ recipe.url }}&size=16" class="size-4">
+                        <p class="text-muted-foreground text-[12px] line-clamp-1 w-full break-all">{{ recipe.url }}</p>
+                        <i class="fas fa-external-link-alt fa-xs ml-1"></i>
+                    </div>
+
+                </div>
+            </div>
+        </a>
+        <div class="flex justify-between items-center gap-x-2 bg-white py-2 px-4 relative">
+            <div class="flex items-center relative">
+                {% for entry in recipe.entries %}
+                <div class="line-clamp-1 flex items-center justify-center size-8 rounded-full leading-none text-white text-[10px] overflow-hidden z-[{{forloop.counter0|add:'1'}}] border-2 border-background {% if forloop.counter0 > 0 %}-ml-2{% endif %}" data-username="{{ entry.user }}">
+                    {{ entry.user }}
+                </div>
+                {% endfor %}
+            </div>
+            <button class=" w-auto gap-x-1 button {% if recipe.wantToEat %}button-primary{% else %}button-secondary{% endif %}" onclick="handleWantToEat(event)" data-recipe-id="{{ recipe.id }}" data-want-to-eat="{{ recipe.wantToEat|yesno:'true,false' }}">
+                <i class="fas fa-utensils fa-sm"></i>
+                <span class="text-[10px] font-semibold leading-none">食べたい</span>
+            </button>
+        </div>
+    </div>
+    {% endfor %} {% endif %}
+</main>
+{% endblock %} {% block extra_js %}
+<script>
+    const COLORS = [
+        'bg-user-icon-1',
+        'bg-user-icon-2',
+        'bg-user-icon-3',
+        'bg-user-icon-4',
+        'bg-user-icon-5',
+    ];
+
+    function getColorFromUsername(username) {
+        // ユーザー名のハッシュ値を計算して色を選択
+        let hash = 0;
+        for (let i = 0; i < username.length; i++) {
+            hash = ((hash << 5) - hash) + username.charCodeAt(i);
+            hash = hash & hash;
+            const colorIndex = Math.abs(hash) % COLORS.length;
+            return COLORS[colorIndex];
+        }
+    }
+
+
+    // ページ読み込み時の初期状態設定
+    document.addEventListener('DOMContentLoaded', () => {
+        // ユーザーアイコンの色を設定
+        document.querySelectorAll('[data-username]').forEach(element => {
+            const username = element.dataset.username;
+            element.classList.add(getColorFromUsername(username));
+        });
+    });
+</script>
+{% endblock %}
