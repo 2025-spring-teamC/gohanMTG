@@ -1,7 +1,8 @@
-import os, random, json, unicodedata, requests
+import os, random, json, requests
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect
+from django.contrib import messages
 from collections import defaultdict
 from account.models import FamilyGroup, User
 from search.models import Recipe, Group_recipe, User_recipe
@@ -58,16 +59,51 @@ def wantToEat_view(request):
     try:
         group = user.familygroup
     except FamilyGroup.DoesNotExist as e:
-        print("[ERROR] グループが見つかりません。", e)
+        messages.error(request, f"予期しないエラーが発生しました: {str(e)}")
 
+    # POST処理
+    if request.method == "POST":
+        try:
+            recipe_url = request.POST.get("recipe_url")
+            action_source = request.POST.get("action_source", "")
+
+            # モーダルウィンドウからレシピ追加
+            if action_source == "modal":
+                recipe, recipe_created = Recipe.objects.get_or_create(
+                    user=user,
+                    url=recipe_url
+                )
+
+            # 食べたいボタン押下時処理
+            elif action_source == "detail":
+                # 既存のレシピをURLで検索し、一番古いIDを持つレコードを取得
+                recipe = Recipe.objects.filter(url=recipe_url).order_by("id").first()
+
+            else:
+                messages.error(request, "不正なリクエストです。")
+                return redirect('want_to_eat')
+
+            # Group_recipeに登録（共通）
+            group_recipe, group_created = Group_recipe.objects.get_or_create(
+                group=group,
+                recipe=recipe,
+                user=user
+            )
+
+            return redirect('want_to_eat')
+
+        except Exception as e:
+            messages.error(request, f"予期しないエラーが発生しました: {str(e)}")
+
+    # GET処理
     # DBからデータ取得
-    entries = Group_recipe.objects.filter(group=group)
+    entries = Group_recipe.objects.filter(group=group).select_related("recipe", "user")
 
     # レシピごとにユーザー情報と登録日時まとめる
     recipe_info = defaultdict(list)
     for entry in entries:
         recipe_info[entry.recipe.url].append({
-            "recipe_name": entry.recipe.url,
+            "recipe_url": entry.recipe.url,
             "user": entry.user.name,
             "registered_at": entry.created_at,
         })
@@ -79,7 +115,6 @@ def wantToEat_view(request):
 
         want_list.append({
             "url": url,
-            "recipe_name": infos[0]["recipe_name"],
             "entries": infos,
             "image": scraping_data["image"],
             "title": scraping_data["title"],
@@ -195,6 +230,38 @@ def searchRecipes_view(request):
 # レシピ詳細画面表示機能
 @login_required
 def recipeDetail(request, recipe_id):
+
+    user = request.user
+
+    try:
+        group = user.familygroup
+    except FamilyGroup.DoesNotExist as e:
+        messages.error(request, f"予期しないエラーが発生しました: {str(e)}")
+
+    # POST処理
+    if request.method == "POST":
+        try:
+            recipe_url = request.POST.get("recipe_url")
+
+            # Recipeに登録
+            recipe, recipe_created = Recipe.objects.get_or_create(
+                user=user,
+                url=recipe_url,
+            )
+
+            # Group_recipeに登録
+            group_recipe, group_created = Group_recipe.objects.get_or_create(
+                group=group,
+                recipe=recipe,
+                user=user
+            )
+
+            return redirect('want_to_eat')
+
+        except Exception as e:
+            messages.error(request, f"予期しないエラーが発生しました: {str(e)}")
+
+    # GET処理
     foods = request.session.get('foods', [])
 
     recipe = next((food for food in foods if food["recipeId"] == recipe_id), None)
