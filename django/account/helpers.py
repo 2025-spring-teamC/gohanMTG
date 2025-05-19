@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from account.models import User, FamilyGroup
 from account.validators import validate_password_strength, validate_email_format
 from account.errors import add_error
+import random
 
 # グループ名と合言葉の組み合わせが重複しないようにチェック
 def validate_unique_group_name_and_password(name, password, errors):
@@ -82,7 +83,64 @@ def collect_signup_errors(name, email, password, password_confirm, errors):
 
     return errors
 
+
+# ユーザーアイコン
+ICON_CANDIDATES = [
+    str(i) for i in range(1, 11) # 1~10の連番(画像ファイルの名前を1~10にする)
+]
+
+def get_unique_icon_for_group(group):
+    # すでに使用されているicon_codeを取得
+    used_icons = User.objects.filter(familygroup=group).values_list("icon_code", flat=True)
+
+    # 未使用のアイコンを取得
+    available_icons = list(set(ICON_CANDIDATES) - set(used_icons))
+
+    # 使えるアイコンがあればランダムに返す
+    if available_icons:
+        return random.choice(available_icons)
+    else:
+    # 全て使用済み → 重複OKでランダムに
+        return random.choice(ICON_CANDIDATES)
+
+
 # セッションクリア
 def clear_group_session(session):
     for key in ["group_action", "group_name", "group_password"]:
         session.pop(key, None)
+
+
+# # 名前の更新
+# def update_name(user, name, errors):
+#     if not name:
+#         errors = add_error(errors, "name_required")
+#     else:
+#         user.name = name
+#     return errors
+
+
+# # メールアドレスの更新
+# def update_email(user, email, errors):
+#     if not email:
+#         errors = add_error(errors, "email_required")
+#     elif User.objects.exclude(pk=user.pk).filter(email=email).exists():
+#         errors = add_error(errors, "email_taken")
+#     else:
+#         user.email = email
+#     return errors
+
+
+# # パスワード更新
+# def update_password(user, current_password, new_password, new_password_confirm, errors):
+#     if not current_password:
+#         errors = add_error(errors, "current_password_required")
+#     elif not check_password(current_password, user.password):
+#         errors = add_error(errors, "current_password_incorrect")
+#     elif new_password != new_password_confirm:
+#         errors = add_error(errors, "password_mismatch")
+#     else:
+#         errors = validate_password_strength(new_password, errors)
+
+#     if not errors:
+#         user.set_password(new_password)
+#     return errors

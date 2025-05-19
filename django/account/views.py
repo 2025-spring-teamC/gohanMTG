@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from django.db import transaction
 from account import models, helpers, validators
 from account.errors import add_error
+from django.contrib.auth.decorators import login_required
 
-# グループ選択機能
+# グループ選択画面
 def group_select_view(request):
     context = {
         "action": request.POST.get("action", ""),  # "join" or "create"
@@ -80,7 +81,7 @@ def group_select_view(request):
     return render(request, "group_select.html", context)
 
 
-# サインアップ機能
+# サインアップ画面
 @transaction.atomic
 def signup_view(request):
     context = {
@@ -132,12 +133,15 @@ def signup_view(request):
             return redirect("group_select")
 
         #ユーザー作成
+        icon_code = helpers.get_unique_icon_for_group(group)
+
         try:
             user = models.User.objects.create_user(
                 email=email,
                 password=password,
                 name=name,
-                familygroup=group
+                familygroup=group,
+                icon_code=icon_code,
             )
 
             helpers.clear_group_session(request.session)
@@ -153,7 +157,7 @@ def signup_view(request):
     return render(request, "signup.html", context)
 
 
-#ログイン機能
+#ログイン画面処理
 def login_view(request):
 
     context = {
@@ -183,11 +187,52 @@ def login_view(request):
     return render(request, "login.html", context)
 
 
-# ログアウト機能
+# ログアウト画面処理
 def logout_view(request):
     logout(request)
     messages.success(request, "ログアウトしました。")
     return redirect('login')
+
+
+# # マイページ画面処理
+# @login_required
+# def mypage_view(request):
+#     user = request.user
+#     context = {
+#         "name": user.name,
+#         "email": user.email,
+#     }
+#     errors = []
+
+#     if request.method == "POST":
+#         name = request.POST.get("name", "").strip()
+#         email = request.POST.get("email", "").strip()
+#         current_password = request.POST.get("current_password", "")
+#         new_password = request.POST.get("new_password", "")
+#         new_password_confirm = request.POST.get("new_password_confirm", "")
+
+#         # 各更新処理を呼び出し
+#         errors = helpers.update_name(user, name, errors)
+#         errors = helpers.update_email(user, email, errors)
+
+#         if new_password or new_password_confirm:
+#             errors = helpers.update_password(user, current_password, new_password, new_password_confirm, errors)
+
+#         if errors:
+#             for error in errors:
+#                 messages.error(request, error)
+#             context.update({"name": name, "email": email})
+#             return render(request, "mypage.html", context)
+
+#         # 変更保存
+#         user.save()
+#         if new_password:
+#             update_session_auth_hash(request, user)
+
+#         messages.success(request, "ユーザー情報を更新しました。")
+#         return redirect("mypage")
+
+#     return render(request, "mypage.html", context)
 
 
 #追い出し処理

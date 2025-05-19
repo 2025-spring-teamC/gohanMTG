@@ -14,6 +14,7 @@ class Command(BaseCommand):
         family_name = os.getenv("DJANGO_SUPERUSER_FAMILY", "開発")
         group_password = os.getenv("DJANGO_SUPERUSER_FAMILY_PASSWORD", "family_password")
         name = os.getenv("DJANGO_SUPERUSER_NAME", "Admin")
+        icon_code = 1
 
         if not FamilyGroup.objects.filter(name=family_name).exists():
             family = FamilyGroup.objects.create(name=family_name, secret_key=group_password)
@@ -23,7 +24,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"FamilyGroup already exists: {family_name}"))
 
         if not User.objects.filter(email=email).exists():
-            User.objects.create_superuser(email=email, password=password, familygroup=family, name=name)
+            User.objects.create_superuser(email=email, password=password, familygroup=family, name=name, icon_code=str(icon_code))
             self.stdout.write(self.style.SUCCESS(f"Superuser created: {email}"))
         else:
             self.stdout.write(self.style.WARNING(f"Superuser already exists: {email}"))
