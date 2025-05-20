@@ -10,7 +10,6 @@ from django.contrib.auth.decorators import login_required
 from account.decorators import group_access_required
 
 
-
 # レシピURLからimage, title, descriptionの情報を抽出する機能
 def recipeURLscraping(url):
     try:
@@ -64,6 +63,7 @@ def wantToEat_view(request):
     # POST処理
     if request.method == "POST":
         try:
+            recipe_id = request.POST.get("recipe_id")
             recipe_url = request.POST.get("recipe_url")
             action_source = request.POST.get("action_source", "")
 
@@ -73,12 +73,10 @@ def wantToEat_view(request):
                     user=user,
                     url=recipe_url
                 )
-
             # 食べたいボタン押下時処理
             elif action_source == "detail":
-                # 既存のレシピをURLで検索し、一番古いIDを持つレコードを取得
-                recipe = Recipe.objects.filter(url=recipe_url).order_by("id").first()
-
+                # レシピIDで該当レコード取得
+                recipe = Recipe.objects.get(id=recipe_id)
             else:
                 messages.error(request, "不正なリクエストです。")
                 return redirect('want_to_eat')
@@ -103,7 +101,9 @@ def wantToEat_view(request):
     recipe_info = defaultdict(list)
     for entry in entries:
         recipe_info[entry.recipe.url].append({
+            "recipe_id": entry.recipe.id,
             "recipe_url": entry.recipe.url,
+            "user_id": entry.user.id,
             "user": entry.user.name,
             "registered_at": entry.created_at,
         })
