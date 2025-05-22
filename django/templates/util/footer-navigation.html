@@ -1,7 +1,7 @@
 <footer class=" bg-background shadow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav class="flex justify-around items-center py-3">
-            <a href="{% url 'want_to_eat' %}" class="flex flex-col items-center {% if '/want_eats/' in request.path %}text-primary{% else %}text-muted-foreground hover:text-primary{% endif %}">
+            <a href="{% url 'want_to_eat' %}" class="flex flex-col items-center {% if request.path == '/' %}text-primary{% else %}text-muted-foreground hover:text-primary{% endif %}">
                 <i class="fas fa-home text-xl"></i>
                 <span class="text-xs mt-1">ホーム</span>
             </a>
