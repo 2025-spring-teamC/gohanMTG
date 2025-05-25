@@ -66,6 +66,7 @@ def wantToEat_view(request):
             recipe_id = request.POST.get("recipe_id")
             recipe_url = request.POST.get("recipe_url")
             action_source = request.POST.get("action_source", "")
+            want_my_list = request.POST.get("want_my_list", "")
 
             # モーダルウィンドウからレシピ追加
             if action_source == "modal":
@@ -75,8 +76,22 @@ def wantToEat_view(request):
                 )
             # 食べたいボタン押下時処理
             elif action_source == "detail":
-                # レシピIDで該当レコード取得
-                recipe = Recipe.objects.get(id=recipe_id)
+                # 食べたいリストに登録
+                if want_my_list == "False":
+                    # レシピIDで該当レコード取得
+                    recipe = Recipe.objects.get(id=recipe_id)
+                    want_my_list = True
+
+                # 食べたいリストから削除
+                elif want_my_list == "True":
+                    group_recipe = Group_recipe.objects.get(
+                        group=group,
+                        recipe_id=recipe_id,
+                        user=user
+                    )
+                    group_recipe.delete()
+                    want_my_list = False
+
             else:
                 messages.error(request, "不正なリクエストです。")
                 return redirect('want_to_eat')
@@ -94,6 +109,7 @@ def wantToEat_view(request):
             messages.error(request, f"予期しないエラーが発生しました: {str(e)}")
 
     # GET処理
+    want_my_list = None
     # DBからデータ取得
     entries = Group_recipe.objects.filter(group=group).select_related("recipe", "user")
 
@@ -105,6 +121,7 @@ def wantToEat_view(request):
             "recipe_url": entry.recipe.url,
             "user_id": entry.user.id,
             "user": entry.user.name,
+            "icon_code": entry.user.icon_code,
             "registered_at": entry.created_at,
         })
 
@@ -123,6 +140,7 @@ def wantToEat_view(request):
 
     context = {
         "group": group,
+        "want_my_list": want_my_list,
         "recipe_list": want_list,
     }
 
