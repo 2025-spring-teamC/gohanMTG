@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from django.db import transaction
+from django.http import HttpResponse
 from account import models, helpers, validators
 from account.errors import add_error
 from django.contrib.auth.decorators import login_required
@@ -255,3 +256,7 @@ def logout_view(request):
 
 #     messages.success(request, f"{target_user.name} をグループから退出させましました")
 #     return redirect("home")
+
+# ヘルスチェック用
+def health_check(request):
+    return HttpResponse("OK", status=200)
