@@ -26,15 +26,52 @@
                 </div>
                 {% endfor %}
             </div>
-            <button class=" w-auto gap-x-1 button {% if recipe.wantToEat %}button-primary{% else %}button-secondary{% endif %}" onclick="handleWantToEat(event)" data-recipe-id="{{ recipe.id }}" data-want-to-eat="{{ recipe.wantToEat|yesno:'true,false' }}">
-                <i class="fas fa-utensils fa-sm"></i>
-                <span class="text-[10px] font-semibold leading-none">食べたい</span>
-            </button>
+            <form method="POST" action="{% url 'want_to_eat' %}" class="m-0">
+                {% csrf_token %}
+                <input type="hidden" name="recipe_id" value="{{ recipe.entries.0.recipe_id }}">
+                <input type="hidden" name="action_source" value="detail">
+                <button type="submit" class="w-auto gap-x-1 button {% if recipe.wantToEat %}button-primary{% else %}button-secondary{% endif %}">
+                    <i class="fas fa-utensils fa-sm"></i>
+                    <span class="text-[10px] font-semibold leading-none">食べたい</span>
+                </button>
+            </form>
+
         </div>
     </div>
     {% endfor %} {% endif %}
+
+    <!-- リスト追加ボタン -->
+    <button id="openModalBtn" class="fixed bottom-20 right-6 button button-primary shadow-lg gap-x-px size-12">
+    <i class="fas fa-plus text-xl"></i>
+</button>
+    <!-- Modal -->
+    <div id="addRecipeModal" class="fixed inset-0 bg-background-modal-overlay hidden items-center justify-center z-50">
+        <div class="bg-background rounded-lg p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">食べたいものを追加</h2>
+                <button id="closeModalBtn" class="text-muted-foreground hover:text-foreground">
+                <i class="fas fa-times"></i>
+            </button>
+            </div>
+            <form method="POST" action="{% url 'want_to_eat' %}" class="space-y-4" id="addRecipeForm" novalidate>
+                {% csrf_token %}
+                <div>
+                    <label for="recipe_url" class="block text-sm font-medium mb-1">レシピのURL</label>
+                    <input type="url" name="recipe_url" id="recipeUrl" required class="input" placeholder="https://recipe.example.com/...">
+                    <div id="recipeUrlError" class="error-message"></div>
+                </div>
+                <input type="hidden" name="action_source" value="modal">
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="cancelBtn" class="button button-secondary">キャンセル</button>
+                    <button type="submit" class="button button-primary">追加</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </main>
-{% endblock %} {% block extra_js %}
+{% endblock %} {% block extra_js %} {% load static %}
+<script src="{% static 'js/want_eats/modal.js' %}"></script>
+<script src="{% static 'js/want_eats/validation.js' %}"></script>
 <script>
     const COLORS = [
         'bg-user-icon-1',
@@ -54,7 +91,6 @@
             return COLORS[colorIndex];
         }
     }
-
 
     // ページ読み込み時の初期状態設定
     document.addEventListener('DOMContentLoaded', () => {
