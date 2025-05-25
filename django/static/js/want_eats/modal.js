@@ -5,8 +5,7 @@ class RecipeModal {
         this.closeBtn = document.getElementById('closeModalBtn');
         this.cancelBtn = document.getElementById('cancelBtn');
         this.form = document.getElementById('addRecipeForm');
-        this.urlInput = document.getElementById('recipe_url');
-        this.errorMessage = this.urlInput.parentNode.querySelector('.error-message');
+        this.errorMessage = document.getElementById('recipeUrlError');
 
         this.initializeEventListeners();
     }

@@ -57,8 +57,8 @@
                 {% csrf_token %}
                 <div>
                     <label for="recipe_url" class="block text-sm font-medium mb-1">レシピのURL</label>
-                    <input type="url" name="recipe_url" id="recipeUrl" required class="input" placeholder="https://recipe.example.com/...">
-                    <div class="error-message"></div>
+                    <input type="url" name="recipe_url" required class="input" placeholder="https://recipe.example.com/...">
+                    <div id="recipeUrlError" class="error-message"></div>
                 </div>
                 <input type="hidden" name="action_source" value="modal">
                 <div class="flex justify-end gap-2">
