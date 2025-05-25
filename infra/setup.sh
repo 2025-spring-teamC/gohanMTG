@@ -16,7 +16,7 @@ sudo chown ec2-user:ec2-user "$SSH_DIR/id_rsa"
 echo "git clone..."
 sudo -u ec2-user bash -c "ssh-keyscan github.com >> $SSH_DIR/known_hosts"
 git -c core.sshCommand="ssh -i  $SSH_DIR/id_rsa" \
-  clone --branch infra/fix-prodfile git@github.com:2025-spring-teamC/gohanMTG.git /home/ec2-user/gohanMTG
+  clone --branch infra/test-deploy git@github.com:2025-spring-teamC/gohanMTG.git /home/ec2-user/gohanMTG
 
 # .env 作成
 echo " Creating .env file......"
