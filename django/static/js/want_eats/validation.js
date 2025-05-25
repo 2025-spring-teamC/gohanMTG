@@ -55,7 +55,7 @@ class RecipeValidation {
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('addRecipeForm');
     const urlInput = document.getElementById('recipeUrl');
-    const errorMessage = urlInput.parentNode.querySelector('.error-message');
+    const errorMessage = document.getElementById('recipeUrlError');
 
     if (form && urlInput && errorMessage) {
         new RecipeValidation(form, urlInput, errorMessage);
