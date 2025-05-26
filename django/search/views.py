@@ -1,5 +1,5 @@
 import os, random, json
-import requests, threading
+import requests
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from django.shortcuts import render, redirect
@@ -120,7 +120,7 @@ def wantToEat_view(request):
             "recipe_url": entry.recipe.url,
             "user_id": entry.user.id,
             "user": entry.user.name,
-            #"icon_code": entry.user.icon_code,
+            "icon_code": entry.user.icon_code,
             "registered_at": entry.created_at,
         })
 
