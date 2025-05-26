@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ye&e-*$oxgz6x+a5u211@s^_%@i5=an4m-!7))a2@w29*4g&ti'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
@@ -86,6 +86,7 @@ DATABASES = {
         'PASSWORD': os.getenv("MYSQL_PASSWORD"),
         'HOST': os.getenv("MYSQL_HOST"),
         'PORT': '3306',
+        'OPTIONS': {},
     }
 }
 
@@ -147,3 +148,11 @@ LOGOUT_REDIRECT_URL = "login"
 
 # セッション設定
 SESSION_SAVE_EVERY_REQUEST = True
+
+# 本番環境用
+if not DEBUG:
+    DATABASES['default']['OPTIONS']['ssl'] = {
+        'ca': str(BASE_DIR / 'certs/rds-combined-ca-bundle.pem')
+    }
+    CSRF_TRUSTED_ORIGINS = ["https://gohanmtg.com"]
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
