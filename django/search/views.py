@@ -1,5 +1,6 @@
 import os, random, json
 import requests
+import concurrent.futures
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from django.shortcuts import render, redirect
@@ -64,6 +65,7 @@ def wantToEat_view(request):
     # POST処理
     if request.method == "POST":
         try:
+            recipe = None
             recipe_id = request.POST.get("recipe_id")
             recipe_url = request.POST.get("recipe_url")
             action_source = request.POST.get("action_source", "")
@@ -97,11 +99,12 @@ def wantToEat_view(request):
                 return redirect('want_to_eat')
 
             # Group_recipeに登録（共通）
-            group_recipe, group_created = Group_recipe.objects.get_or_create(
-                group=group,
-                recipe=recipe,
-                user=user
-            )
+            if recipe is not None:
+                group_recipe, group_created = Group_recipe.objects.get_or_create(
+                    group=group,
+                    recipe=recipe,
+                    user=user
+                )
 
             return redirect('want_to_eat')
 
@@ -124,10 +127,26 @@ def wantToEat_view(request):
             "registered_at": entry.created_at,
         })
 
+
+    # スクレイピング対象のURLリスト
+    urls = list(recipe_info.keys())
+
+    # 並列でスクレイピング実行
+    scraping_parallel = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        scraping_for_url = {executor.submit(recipeURLscraping, url): url for url in urls}
+        for future in concurrent.futures.as_completed(scraping_for_url):
+            url = scraping_for_url[future]
+            try:
+                scraping_parallel[url] = future.result()
+            except Exception as e:
+                scraping_parallel[url] = {"image": None, "title": "", "description": ""}
+
+
     # 表示しやすいように整形
     want_list = []
     for url, infos in recipe_info.items():
-        scraping_data = recipeURLscraping(url)
+        scraping_data = scraping_parallel.get(url, {"image": None, "title": "", "description": ""})
 
         # ログインユーザーが含まれていればTrue
         want_my_list = any(entry["user_id"] == user.id for entry in infos)
