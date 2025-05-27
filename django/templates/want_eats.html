@@ -21,16 +21,17 @@
         <div class="flex justify-between items-center gap-x-2 bg-white py-2 px-4 relative">
             <div class="flex items-center relative">
                 {% for entry in recipe.entries %}
-                <div class="line-clamp-1 flex items-center justify-center size-8 rounded-full leading-none text-white text-[10px] overflow-hidden z-[{{forloop.counter0|add:'1'}}] border-2 border-background {% if forloop.counter0 > 0 %}-ml-2{% endif %}" data-username="{{ entry.user }}">
+                <div class="line-clamp-1 flex items-center justify-center size-8 rounded-full leading-none text-white text-[10px] overflow-hidden z-[{{forloop.counter0|add:'1'}}] border-2 border-background {% if forloop.counter0 > 0 %}-ml-2{% endif %}" data-icon-code="{{ entry.icon_code }}">
                     {{ entry.user }}
                 </div>
                 {% endfor %}
             </div>
             <form method="POST" action="{% url 'want_to_eat' %}" class="m-0">
                 {% csrf_token %}
-                <input type="hidden" name="recipe_id" value="{{ recipe.entries.0.recipe_id }}">
                 <input type="hidden" name="action_source" value="detail">
-                <button type="submit" class="w-auto gap-x-1 button {% if recipe.wantToEat %}button-primary{% else %}button-secondary{% endif %}">
+                <input type="hidden" name="recipe_id" value="{{ recipe.entries.0.recipe_id }}">
+                <input type="hidden" name="want_my_list" value="{{ recipe.want_my_list }}">
+                <button type="submit" class="w-auto gap-x-1 button {% if recipe.want_my_list %}button-primary{% else %}button-secondary{% endif %}">
                     <i class="fas fa-utensils fa-sm"></i>
                     <span class="text-[10px] font-semibold leading-none">食べたい</span>
                 </button>
@@ -70,35 +71,7 @@
     </div>
 </main>
 {% endblock %} {% block extra_js %} {% load static %}
-<script src="{% static 'js/want_eats/modal.js' %}"></script>
-<script src="{% static 'js/want_eats/validation.js' %}"></script>
-<script>
-    const COLORS = [
-        'bg-user-icon-1',
-        'bg-user-icon-2',
-        'bg-user-icon-3',
-        'bg-user-icon-4',
-        'bg-user-icon-5',
-    ];
-
-    function getColorFromUsername(username) {
-        // ユーザー名のハッシュ値を計算して色を選択
-        let hash = 0;
-        for (let i = 0; i < username.length; i++) {
-            hash = ((hash << 5) - hash) + username.charCodeAt(i);
-            hash = hash & hash;
-            const colorIndex = Math.abs(hash) % COLORS.length;
-            return COLORS[colorIndex];
-        }
-    }
-
-    // ページ読み込み時の初期状態設定
-    document.addEventListener('DOMContentLoaded', () => {
-        // ユーザーアイコンの色を設定
-        document.querySelectorAll('[data-username]').forEach(element => {
-            const username = element.dataset.username;
-            element.classList.add(getColorFromUsername(username));
-        });
-    });
-</script>
+<script src="{% static 'js/want_eats/modal.js' %} "></script>
+<script src="{% static 'js/want_eats/validation.js' %} "></script>
+<script src="{% static 'js/want_eats/user_icons.js' %} "></script>
 {% endblock %}
