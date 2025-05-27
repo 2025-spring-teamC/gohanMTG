@@ -139,7 +139,7 @@ Resources:
       - Key: Name
         Value: !Sub '${ProjectName}-natgateway'
 
-  # ルートテーブル(pablic)
+  # ルートテーブル(public)
   PublicRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:

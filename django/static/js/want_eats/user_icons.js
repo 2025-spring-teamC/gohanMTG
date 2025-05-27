@@ -1,15 +1,15 @@
 // ユーザーアイコンの色を管理
 const COLORS = [
-    'bg-user-icon-1', // 赤
-    'bg-user-icon-2', // オレンジ
-    'bg-user-icon-3', // 黄色
-    'bg-user-icon-4', // 緑
-    'bg-user-icon-5', // 水色
-    'bg-user-icon-6', // 青
-    'bg-user-icon-7', // 紫
-    'bg-user-icon-8', // ピンク
-    'bg-user-icon-9', // 茶色
-    'bg-user-icon-10', // グレー
+    'bg-user-icon-1',
+    'bg-user-icon-2',
+    'bg-user-icon-3',
+    'bg-user-icon-4',
+    'bg-user-icon-5',
+    'bg-user-icon-6',
+    'bg-user-icon-7',
+    'bg-user-icon-8',
+    'bg-user-icon-9',
+    'bg-user-icon-10',
 ];
 
 /**
