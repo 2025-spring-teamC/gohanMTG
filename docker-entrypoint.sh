@@ -4,9 +4,6 @@ set -e
 mkdir -p /code/nginx/static
 chown -R myuser:mygroup /code/nginx/static
 
-echo "Running npm build..."
-npm run build
-
 echo "Collecting static files..."
 python django/manage.py collectstatic --noinput
 

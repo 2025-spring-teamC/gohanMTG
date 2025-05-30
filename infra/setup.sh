@@ -61,11 +61,6 @@ ssl-verify-server-cert=true
 ssl-ca="$PROJECT_DIR/django/certs/rds-combined-ca-bundle.pem"
 EOF
 
-# tailwindインストール
-echo "Installing Tailwind..."
-cd "$PROJECT_DIR"
-docker-compose -f docker-compose.yaml run --rm app npm install
-
 # mysqlユーザー作成
 echo " Creating MySQL User......"
 MYSQL_ROOT_USER=masteruser
