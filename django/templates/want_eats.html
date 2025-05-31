@@ -1,0 +1,77 @@
+{% extends 'util/layout.html' %} {% block title %}食べたいものリスト{% endblock %} {% block content %}
+
+<main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-auto px-4 sm:px-6 lg:px-8 py-10 max-w-7xl">
+    {% if recipe_list %} {% for recipe in recipe_list %}
+    <div class="bg-background/80 rounded-lg shadow-md overflow-hidden grid grid-rows-[1fr_auto]">
+        <a href="{{ recipe.url }}" target="_blank" class="block hover:scale-102 transition-all duration-300 border-b border-border">
+            <div class="bg-background grid grid-cols-[minmax(100px,1fr)_auto] md:grid-cols-1">
+                <img src="{{ recipe.image }}" alt="{{ recipe.recipe_name }}" class="w-full h-full md:max-h-48 object-cover">
+                <div class="p-4 w-full">
+                    <h3 class="text-base md:text-lg font-semibold font-mono leading-tight line-clamp-2">{{ recipe.title }}</h3>
+                    <p class=" text-sm mt-1 line-clamp-3">{{ recipe.description }}</p>
+                    <div class="flex items-center overflow-hidden gap-x-1 mt-2">
+                        <img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={{ recipe.url }}&size=16" class="size-4">
+                        <p class="text-muted-foreground text-[12px] line-clamp-1 w-full break-all">{{ recipe.url }}</p>
+                        <i class="fas fa-external-link-alt fa-xs ml-1"></i>
+                    </div>
+
+                </div>
+            </div>
+        </a>
+        <div class="flex justify-between items-center gap-x-2 bg-white py-2 px-4 relative">
+            <div class="flex items-center relative">
+                {% for entry in recipe.entries %}
+                <div class="line-clamp-1 flex items-center justify-center size-8 rounded-full leading-none text-white text-[10px] overflow-hidden z-[{{forloop.counter0|add:'1'}}] border-2 border-background {% if forloop.counter0 > 0 %}-ml-2{% endif %}" data-icon-code="{{ entry.icon_code }}">
+                    {{ entry.user }}
+                </div>
+                {% endfor %}
+            </div>
+            <form method="POST" action="{% url 'want_to_eat' %}" class="m-0">
+                {% csrf_token %}
+                <input type="hidden" name="action_source" value="detail">
+                <input type="hidden" name="recipe_id" value="{{ recipe.entries.0.recipe_id }}">
+                <input type="hidden" name="want_my_list" value="{{ recipe.want_my_list }}">
+                <button type="submit" class="w-auto gap-x-1 button {% if recipe.want_my_list %}button-primary{% else %}button-secondary{% endif %}">
+                    <i class="fas fa-utensils fa-sm"></i>
+                    <span class="text-[10px] font-semibold leading-none">食べたい</span>
+                </button>
+            </form>
+
+        </div>
+    </div>
+    {% endfor %} {% endif %}
+
+    <!-- リスト追加ボタン -->
+    <button id="openModalBtn" class="fixed bottom-20 right-6 button button-primary shadow-lg gap-x-px size-12">
+    <i class="fas fa-plus text-xl"></i>
+</button>
+    <!-- Modal -->
+    <div id="addRecipeModal" class="fixed inset-0 bg-background-modal-overlay hidden items-center justify-center z-50">
+        <div class="bg-background rounded-lg p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">食べたいものを追加</h2>
+                <button id="closeModalBtn" class="text-muted-foreground hover:text-foreground">
+                <i class="fas fa-times"></i>
+            </button>
+            </div>
+            <form method="POST" action="{% url 'want_to_eat' %}" class="space-y-4" id="addRecipeForm" novalidate>
+                {% csrf_token %}
+                <div>
+                    <label for="recipe_url" class="block text-sm font-medium mb-1">レシピのURL</label>
+                    <input type="url" name="recipe_url" id="recipeUrl" required class="input" placeholder="https://recipe.example.com/...">
+                    <div id="recipeUrlError" class="error-message"></div>
+                </div>
+                <input type="hidden" name="action_source" value="modal">
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="cancelBtn" class="button button-secondary">キャンセル</button>
+                    <button type="submit" class="button button-primary">追加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %} {% block extra_js %} {% load static %}
+<script src="{% static 'js/want_eats/modal.js' %} "></script>
+<script src="{% static 'js/want_eats/validation.js' %} "></script>
+<script src="{% static 'js/want_eats/user_icons.js' %} "></script>
+{% endblock %}

@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+
+<head>
+    {% include "util/head.html" %}
+    <title>{% block title %}{% endblock %} - うちのごはん会議</title>
+</head>
+
+<body class="bg-background-muted grid grid-rows-[auto_minmax(0,1fr)_auto] h-screen h-svh overflow-hidden">
+    {% include "util/header.html" %}
+    <div id="content" class="bg-background-muted  min-w-screen h-full overflow-y-auto">{% block content %}{% endblock %}</div>
+    {% block extra_js %}{% endblock %} {% include "util/footer-navigation.html" %}
+</body>
+
+</html>

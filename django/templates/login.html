@@ -1,0 +1,35 @@
+{% extends 'util/layout-auth.html' %} {% block title %}ログイン {% endblock %} {% block content %}
+<form action="{% url 'login' %}" method="post" class="space-y-8" novalidate>
+    {% csrf_token %} {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="space-y-4">
+        <div>
+            <label for="email" class="form-label">メールアドレス</label>
+            <input type="email" id="email" name="email" class="input" placeholder="メールアドレス" value="{{ email }}">
+            <div class="error-message"></div>
+        </div>
+
+        <div>
+            <label for="password" class="form-label">パスワード</label>
+            <input type="password" id="password" name="password" class="input" placeholder="パスワード" value="{{ password }}">
+            <div class="error-message"></div>
+        </div>
+    </div>
+    <button type="submit" class="mt-4 button button-primary">
+      ログイン
+    </button>
+
+</form>
+<hr class="my-8 border-border">
+<div class="mt-6 text-center space-y-4">
+    <a href="{% url 'group_select' %}" class="button button-secondary">新規登録</a>
+</div>
+
+{% block extra_js %} {% load static %}
+<script src="{% static 'js/login/validation.js' %}"></script>
+{% endblock %} {% endblock %}

@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./django/Dockerfile.prod
+    volumes:
+      - .:/code
+      - static_volume:/code/nginx/static/
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-northeast-1
+        awslogs-group: gohanmtg-app-${AZ}
+        awslogs-create-group: "true"
+  web:
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile.prod
+    volumes:
+      - static_volume:/code/nginx/static/
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-northeast-1
+        awslogs-group: gohanmtg-web-${AZ}
+        awslogs-create-group: "true"
+
+
+volumes:
+  static_volume:

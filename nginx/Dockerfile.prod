@@ -1,0 +1,5 @@
+# Nginxのイメージを指定
+FROM nginx:latest
+
+# ローカルのdefault.confをコンテナにコピー
+COPY ./nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf

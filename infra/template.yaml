@@ -1,0 +1,611 @@
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Metadata:
+  AWSToolsMetrics:
+    IaC_Generator: 'arn:aws:cloudformation:ap-northeast-1:500340721711:generatedTemplate/c0729afc-c2d0-41e8-b792-a9578b33b655'
+
+Parameters:
+  # Amazon Linux2023のAMIイメージ
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64'
+  
+  # Route53ホストゾーンID
+  HostZoneId:
+    Type: String
+    Default: Z07436701IAYU0PTVWOMU
+  
+  # ドメイン
+  Domain:
+    Type: String
+    Default: gohanmtg.com
+
+  # プロジェクト名
+  ProjectName:
+    Type: String
+    Default: gohanmtg
+
+Resources:
+  # VPC
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      EnableDnsHostnames: true
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-vpc'
+
+  # パブリックサブネット1
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: ap-northeast-1a
+      CidrBlock: 10.0.0.0/27
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-subnet-public1-ap-northeast-1a'
+
+  # パブリックサブネット2
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: ap-northeast-1c
+      CidrBlock: 10.0.0.32/27
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-subnet-public1-ap-northeast-1c'
+
+   # プライベートサブネット1
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: ap-northeast-1a
+      CidrBlock: 10.0.0.64/27
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-subnet-private1-ap-northeast-1a'
+  
+  # プライベートサブネット2
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: ap-northeast-1c
+      CidrBlock: 10.0.0.96/27
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-subnet-private2-ap-northeast-1c'
+
+  # プライベートサブネット3
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: ap-northeast-1a
+      CidrBlock: 10.0.0.128/27
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-subnet-private3-ap-northeast-1a'
+
+  # プライベートサブネット4
+  PrivateSubnet4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: ap-northeast-1c
+      CidrBlock: 10.0.0.160/27
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-subnet-private4-ap-northeast-1c'
+  
+  # インターネットゲートウェイ
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-igw'
+
+  # インターネットゲートウェイをVPCにアタッチ
+  AttachInternetGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # ElasticIPアドレス
+  NatEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc # VPC用
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-eip'
+
+  # NATゲートウェイ
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEIP.AllocationId # 割り当てるElastic IPのID
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-natgateway'
+
+  # ルートテーブル(public)
+  PublicRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC # VPCに紐づけ
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-public-routetable'
+
+  # パブリックルート(to IGW)
+  PublicRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  
+  # パブリックルートテーブルをパブリックサブネット1にアタッチ
+  PublicRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable1
+
+  # パブリックルートテーブルをパブリックサブネット2にアタッチ
+  PublicRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable1
+
+  # ルートテーブル(private)
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-private-routetable'
+
+  # プライベートルート(to NATGW)
+  PrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      NatGatewayId: !Ref NatGateway
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+    
+  # プライベートルートテーブルをプライベートサブネット1にアタッチ
+  PrivateRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable1
+
+  # プライベートルートテーブルをプライベートサブネット2にアタッチ
+  PrivateRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable1
+  
+  # ALBセキュリティグループ
+  SecurityGroupALB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for ALB
+      GroupName: !Sub '${ProjectName}-alb-sg'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+      - CidrIp: 0.0.0.0/0 # HTTPをHTTPSにリダイレクトするために許可
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+      SecurityGroupEgress:
+      - CidrIp: 0.0.0.0/0
+        IpProtocol: -1
+
+  # EC2セキュリティグループ
+  SecurityGroupEC2:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for private ec2
+      GroupName: !Sub '${ProjectName}-private-sg'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        SourceSecurityGroupId: !Ref SecurityGroupALB
+        ToPort: 80
+      SecurityGroupEgress:
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+
+  # VPCエンドポイントセキュリティグループ
+  SecurityGroupVPCendpoint:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for VPC
+      GroupName: !Sub '${ProjectName}-vpc-endpoint-sg'
+      VpcId: !Ref VPC
+      SecurityGroupIngress: # インバウンドルール
+      - CidrIp: !GetAtt VPC.CidrBlock
+        IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+      SecurityGroupEgress: # アウトバウンドルール
+      - CidrIp: 0.0.0.0/0
+        IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+  
+  # RDSセキュリティグループ
+  SecurityGroupRDS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS
+      GroupName:  !Sub '${ProjectName}-rds-sg'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3306
+        SourceSecurityGroupId: !Ref SecurityGroupEC2
+        ToPort: 3306
+      SecurityGroupEgress:
+      - CidrIp: 0.0.0.0/0
+        IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+
+  # EC2用IAMロール
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+      - 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy' # CloudWatch
+      - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore' # SSM接続
+      - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess' # パラメータストア読み取り
+      - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess' # S3読み取り
+      Policies:
+      - PolicyName: CloudFormationDescribePolicy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - cloudformation:DescribeStacks
+                - cloudformation:ListStacks
+              Resource: "*"
+      RoleName: !Sub '${ProjectName}-role'
+      Description: 'Allows EC2 instances to call AWS services on your behalf.'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal: # このロールを使う対象
+            Service: 'ec2.amazonaws.com' # EC2
+
+  # インスタンスプロファイル(IAMロールをEC2にアタッチするために必要)
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: 
+      - !Ref IAMRole
+      InstanceProfileName: !Ref IAMRole
+
+  # EC2インスタンス1
+  EC2Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: 't2.micro'
+      ImageId: !Ref LatestAmiId
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+      - !Ref SecurityGroupEC2
+      IamInstanceProfile: !Ref 'IAMInstanceProfile'
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-ec2-1'
+      SourceDestCheck: true # 踏み台にするなら無効化（Disable）
+      UserData:
+        Fn::Base64: !Sub | 
+          #!/bin/bash
+          dnf update
+          dnf install -y docker
+          usermod -aG docker ec2-user
+          systemctl start docker
+          systemctl enable docker
+          mkdir -p /usr/local/lib/docker/cli-plugins
+          curl -SL https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          dnf install -y git
+          dnf install -y mariadb105
+
+    
+  # EC2インスタンス2
+  EC2Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: 't2.micro'
+      ImageId: !Ref LatestAmiId
+      SubnetId: !Ref PrivateSubnet2
+      SecurityGroupIds:
+      - !Ref SecurityGroupEC2
+      IamInstanceProfile: !Ref 'IAMInstanceProfile'
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-ec2-2'
+      SourceDestCheck: true
+      UserData:
+        Fn::Base64: !Sub | 
+          #!/bin/bash
+          dnf update
+          dnf install -y docker
+          usermod -aG docker ec2-user
+          systemctl start docker
+          systemctl enable docker
+          mkdir -p /usr/local/lib/docker/cli-plugins
+          curl -SL https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          dnf install -y git
+          dnf install -y mariadb105
+  
+  # VPCエンドポイント（ssm） 
+  VPCEndpoint1:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: 'com.amazonaws.ap-northeast-1.ssm'
+      VpcId: !Ref VPC
+      SubnetIds:
+      - !Ref PrivateSubnet1
+      - !Ref PrivateSubnet2
+      SecurityGroupIds:
+      - !Ref SecurityGroupVPCendpoint
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-endpoint-ssm'
+  
+  # VPCエンドポイント（ssmmessages） 
+  VPCEndpoint2:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: 'com.amazonaws.ap-northeast-1.ssmmessages'
+      VpcId: !Ref VPC
+      SubnetIds:
+      - !Ref PrivateSubnet1
+      - !Ref PrivateSubnet2
+      SecurityGroupIds:
+      - !Ref SecurityGroupVPCendpoint
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-endpoint-ssmmessages'
+
+  # VPCエンドポイント（ec2messages） 
+  VPCEndpoint3:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: 'com.amazonaws.ap-northeast-1.ec2messages'
+      VpcId: !Ref VPC
+      SubnetIds:
+      - !Ref PrivateSubnet1
+      - !Ref PrivateSubnet2
+      SecurityGroupIds:
+      - !Ref SecurityGroupVPCendpoint
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-endpoint-ec2messages'
+  
+  # VPCエンドポイント（S3） 
+  VPCEndpoint4:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: com.amazonaws.ap-northeast-1.s3
+      VpcId: !Ref VPC
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+      VpcEndpointType: Gateway
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-endpoint-s3'
+  
+  # RDSサブネットグループ
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: 'SubnetGroup for RDS'
+      SubnetIds:
+      - !Ref PrivateSubnet3
+      - !Ref PrivateSubnet4
+      DBSubnetGroupName: !Sub '${ProjectName}-rds-subnet'
+  
+  # RDSパラメータグループ
+  RDSParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      DBParameterGroupName: !Sub '${ProjectName}-rsd-pg'
+      Description: 'parametergroup for RDS'
+      Family: mysql8.4
+      Parameters:
+        require_secure_transport: 1
+      Tags: 
+      - Key: Name
+        Value: !Sub '${ProjectName}-rds-pg'
+    
+  # RDSインスタンス1
+  RDSDBInstance1:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      # 基本設定
+      Engine: mysql
+      EngineVersion: '8.4.5'
+      DBInstanceIdentifier: !Sub '${ProjectName}-db'
+      DBName: !Sub '${ProjectName}_db'
+      MasterUsername: masteruser
+      MasterUserPassword: !Sub '{{resolve:ssm-secure:/${ProjectName}/env/MYSQL_ROOT_PASSWORD}}'
+      ManageMasterUserPassword: false # パスワードの自動管理
+      DBParameterGroupName: !Ref RDSParameterGroup
+      # ストレージ
+      AllocatedStorage: 20 # 初期ストレージサイズ
+      MaxAllocatedStorage: 1000
+      StorageType: gp2
+      StorageEncrypted: true # ストレージの暗号化
+      AssociatedRoles: []
+      EnableCloudwatchLogsExports: []
+      Port: 3306
+      ProcessorFeatures: []
+      PreferredBackupWindow: '18:39-19:09'
+      # インスタンス
+      DBInstanceClass: 'db.t4g.micro'
+      MultiAZ: false
+      AvailabilityZone: ap-northeast-1a
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      VPCSecurityGroups:
+      - !GetAtt SecurityGroupRDS.GroupId
+      PubliclyAccessible: false
+      CopyTagsToSnapshot: true
+      CACertificateIdentifier: rds-ca-rsa2048-g1
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-rds'
+ 
+  # ALBターゲットグループ
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      IpAddressType: ipv4
+      HealthCheckIntervalSeconds: 30
+      Matcher:
+        HttpCode: 200
+      HealthCheckPath: '/health/'
+      Port: 80
+      Targets:
+      - Port: 80
+        Id: !Ref EC2Instance1
+      - Port: 80
+        Id: !Ref EC2Instance2
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTP
+      ProtocolVersion: HTTP1
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 5
+      HealthCheckTimeoutSeconds: 5
+      Name: !Sub '${ProjectName}-to-ec2-tg'
+      VpcId: !Ref VPC
+      TargetGroupAttributes:
+      - Key: 'stickiness.enabled' # スティッキーセッションの有効化
+        Value: 'true'
+      - Key: 'stickiness.type' # スティッキーセッションの方式
+        Value: 'lb_cookie' 
+      - Key: 'stickiness.lb_cookie.duration_seconds' # LBが発行するCookieの有効時間（秒）
+        Value: '86400'
+      - Key: 'target_group_health.dns_failover.minimum_healthy_targets.count' # DNSフェイルオーバー時の最小正常ターゲット数
+        Value: '1'
+      - Key: 'target_group_health.unhealthy_state_routing.minimum_healthy_targets.count' # 異常状態ルーティング時の最小正常ターゲット数
+        Value: '1'
+      - Key: 'load_balancing.algorithm.type' # アルゴリズム
+        Value: 'round_robin'
+      TargetType: instance
+      HealthCheckPort: traffic-port
+      Protocol: HTTP
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-alb-targetgroup'
+
+  # ALB
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name:  !Sub '${ProjectName}-alb'
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+      - !Ref PublicSubnet1
+      - !Ref PublicSubnet2
+      SecurityGroups:
+      - !Ref SecurityGroupALB
+      IpAddressType: ipv4
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-alb'
+   
+  # ALBリスナー（HTTPS）
+  ListenerHTTPS:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 443
+      Certificates: # SSL/TSL証明書
+      - CertificateArn: !Sub '{{resolve:ssm:/${ProjectName}/template/CertificateArn}}'
+      Protocol: HTTPS
+      DefaultActions:
+      - TargetGroupArn: !Ref ALBTargetGroup
+        Type: forward
+  
+  # ALBリスナールール（HTTP）
+  ListenerHTTP:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: "HTTP"
+      DefaultActions:
+        - Type: "redirect"
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: 443
+            StatusCode: "HTTP_301"
+
+  # Route53レコード
+  DNSRecord1:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Sub '${HostZoneId}'
+      Comment: Zone apex alias targeted to ALB.
+      RecordSets:
+      - Name: !Sub '${Domain}'
+        Type: A
+        AliasTarget:
+          HostedZoneId: !GetAtt 'ALB.CanonicalHostedZoneID'
+          DNSName: !GetAtt 'ALB.DNSName'
+
+Outputs:
+  # ALBのDNS名
+  ALBDNS:
+    Description: 'DNS name of the ALB'
+    Value: !GetAtt ALB.DNSName
+    Export:
+      Name: ALBDNS
+
+  # RDSのDNS名
+  RDSDNS:
+    Description: 'DNS name of the RDS'
+    Value: !GetAtt RDSDBInstance1.Endpoint.Address
+    Export:
+      Name: RDSDNS
+

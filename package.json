@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.4",
+    "tailwindcss": "^4.1.4"
+  },
+  "scripts": {
+      "watch": "npx @tailwindcss/cli -i ./django/static/css/input.css -o ./django/static/css/output.css --watch",
+      "build": "npx @tailwindcss/cli -i ./django/static/css/input.css -o ./django/static/css/output.css --build"
+  }
+}

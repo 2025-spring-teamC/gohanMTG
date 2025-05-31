@@ -1,0 +1,82 @@
+{% extends 'util/layout-auth.html' %} {% block title %}グループ選択 {% endblock %} {% block content %}
+
+
+<!-- タブ切り替え -->
+<div class="border-b">
+    <nav class="-mb-px flex space-x-8 grid grid-cols-2" aria-label="Tabs">
+        <button type="button" class="tab-button {% if action == 'create' or action == '' %}active-tab{% endif %}" data-tab="create">
+            グループ作成
+        </button>
+        <button type="button" class="tab-button {% if action == 'join' %}active-tab{% endif %}" data-tab="join">
+            グループ参加
+        </button>
+    </nav>
+</div>
+
+<!-- グループ作成フォーム -->
+<div id="create" data-content="create" class="tab-content {% if action == 'create' or action == '' %}active-tab-content{% endif %}">
+    <form action="{% url 'group_select' %}" method="post" class="space-y-8 py-6">
+        {% csrf_token %}
+        <div class="space-y-4">
+            {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li class="error">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %} {% if form.errors %} {% endif %}
+            <input type="hidden" name="action" value="create">
+            <div>
+                <label for="new_group_name" class="form-label">グループ名</label>
+                <input type="text" id="new_group_name" name="new_group_name" placeholder="新しいグループ名" class="input" value="{{ new_group_name }}">
+                <div class="error-message"></div>
+            </div>
+            <div>
+                <label for="new_group_password" class="form-label">合言葉</label>
+                <input type="password" id="new_group_password" name="new_group_password" placeholder="合言葉" class="input" value="{{ new_group_password }}">
+                <div class="error-message"></div>
+            </div>
+        </div>
+        <button type="submit" class="button button-primary">
+            グループを作成する
+        </button>
+    </form>
+</div>
+<!-- グループに参加フォーム -->
+<div id="join" data-content="join" class="tab-content {% if action == 'join' %}active-tab-content{% endif %}">
+    <form action="{% url 'group_select' %}" method="post" class="space-y-8 py-6">
+        {% csrf_token %}
+        <div class="space-y-4">
+            {% if messages %}
+            <ul class="messages ">
+                {% for message in messages %}
+                <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <input type="hidden" name="action" value="join">
+            <div>
+                <label for="group_name" class="form-label">グループ名</label>
+                <input type="text" id="group_name" name="group_name" placeholder="グループ名" class="input" value="{{ group_name }}">
+                <div class="error-message"></div>
+            </div>
+            <div>
+                <label for="group_password" class="form-label">合言葉</label>
+                <input type="password" id="group_password" name="group_password" placeholder="合言葉" class="input" value="{{ group_password }}">
+                <div class="error-message"></div>
+            </div>
+        </div>
+        <button type="submit" class="button button-primary">
+            グループに参加する
+        </button>
+    </form>
+</div>
+<hr class="my-8 border-border">
+<div class="mt-6 text-center space-y-4">
+    <a href="{% url 'login' %}" class="button button-secondary">ログイン</a>
+</div>
+
+{% block extra_js %} {% load static %}
+<script src="{% static 'js/group_select/tabs.js' %}"></script>
+<script src="{% static 'js/group_select/validation.js' %}"></script>
+{% endblock %} {% endblock %}

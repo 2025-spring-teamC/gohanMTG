@@ -1,0 +1,145 @@
+@import "tailwindcss";
+@theme inline {
+    --color-*: initial;
+    --color-primary: var(--primary);
+    --color-destructive: var(--destructive);
+    --color-background: var(--background);
+    --color-background-muted: var(--background-muted);
+    --color-background-modal-overlay: var(--background-modal-overlay);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-user-icon-1: var(--user-icon-1);
+    --color-user-icon-2: var(--user-icon-2);
+    --color-user-icon-3: var(--user-icon-3);
+    --color-user-icon-4: var(--user-icon-4);
+    --color-user-icon-5: var(--user-icon-5);
+    --color-user-icon-6: var(--user-icon-6);
+    --color-user-icon-7: var(--user-icon-7);
+    --color-user-icon-8: var(--user-icon-8);
+    --color-user-icon-9: var(--user-icon-9);
+    --color-user-icon-10: var(--user-icon-10);
+}
+
+:root {
+    --foreground: oklch(0.141% 0.005 285.823);
+    --background: oklch(1 0 0);
+    --background-muted: oklch(0.96 0.0032 197.1);
+    --background-modal-overlay: oklch(0.141% 0.005 285.823 / 0.5);
+    --primary: oklch(0.7 0.1782 46.96);
+    --primary-foreground: oklch(0.982 0.018 155.826);
+    --border: oklch(87.2% 0.01 258.338);
+    --input: oklch(87.2% 0.01 258.338);
+    --ring: oklch(0.97 0 0);
+    --muted: oklch(0.967 0.001 286.375);
+    --muted-foreground: oklch(0.552 0.016 285.938);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.982 0.018 155.826);
+    --user-icon-1: oklch(85% 0.12 111.08);
+    --user-icon-2: oklch(85% 0.12 145.08);
+    --user-icon-3: oklch(85% 0.12 220.08);
+    --user-icon-4: oklch(85% 0.12 295.08);
+    --user-icon-5: oklch(85% 0.12 370.08);
+    --user-icon-6: oklch(85% 0.12 250.08);
+    --user-icon-7: oklch(85% 0.12 320.08);
+    --user-icon-8: oklch(85% 0.12 15.08);
+    --user-icon-9: oklch(85% 0.12 60.08);
+    --user-icon-10: oklch(85% 0.12 0);
+}
+
+body {
+    background-color: var(--background-muted);
+    color: var(--foreground);
+    height: 100vh;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+@layer components {
+    .auth-background {
+        background-image: url('../image/background.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    @media (min-width: 768px) {
+        .auth-background {
+            background-size: auto;
+            background-repeat: repeat;
+        }
+    }
+    .heading1 {
+        @apply text-xl font-bold text-primary;
+    }
+    .error-message {
+        @apply text-destructive text-sm mt-px whitespace-pre-wrap;
+    }
+    .messages:has(li.error) {
+        border-color: var(--destructive);
+        @apply border rounded-md p-4 bg-destructive/10 text-sm;
+    }
+    .messages li.error {
+        color: var(--destructive);
+    }
+    .messages:has(li.success) {
+        border-color: var(--primary);
+        @apply border rounded-md p-4 bg-primary/10 text-sm;
+    }
+    .messages li.success {
+        color: var(--primary);
+    }
+    .form-label {
+        @apply block text-sm font-medium text-muted-foreground mb-1;
+    }
+    .input {
+        @apply block w-full px-3 py-2 border border-input rounded-md shadow-sm;
+    }
+    .input:focus {
+        @apply outline-none ring-primary border-primary;
+    }
+    .button {
+        @apply w-full flex text-center py-2 px-4 rounded-full items-center justify-center;
+    }
+    .button-primary {
+        @apply bg-primary text-primary-foreground;
+    }
+    .button-primary:hover {
+        @apply bg-primary/80;
+    }
+    .button-primary:focus {
+        @apply outline-none ring-primary ring-1;
+    }
+    .button-secondary {
+        @apply border border-primary text-primary
+    }
+    .button-secondary:hover {
+        @apply bg-primary/10;
+    }
+    .button-secondary:focus {
+        @apply outline-none ring-primary ring-1;
+    }
+    .button-destructive {
+        @apply border border-destructive text-destructive bg-background
+    }
+    .button-destructive:hover {
+        @apply bg-destructive/10;
+    }
+    .button-destructive:focus {
+        @apply outline-none ring-destructive ring-1;
+    }
+    .tab-button {
+        @apply border-b-2 border-transparent whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm w-full;
+    }
+    .tab-button.active-tab {
+        @apply border-primary text-primary;
+    }
+    .tab-content {
+        @apply hidden;
+    }
+    .tab-content.active-tab-content {
+        @apply block;
+    }
+}
